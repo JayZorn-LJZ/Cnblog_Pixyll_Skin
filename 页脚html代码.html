@@ -1,0 +1,370 @@
+<!-- =====================================================
+     页脚 HTML / JavaScript
+     Theme : Pixyll Minimalist  |  Author: JayZorn
+     ===================================================== -->
+
+<!-- § 1. 隐藏 [Ctrl+Enter] 提示 -->
+<script>
+function hideStubbornElements() {
+    $("p, span").each(function () {
+        if ($(this).text().indexOf("Ctrl+Enter") >= 0) $(this).hide();
+    });
+}
+$(document).ajaxComplete(hideStubbornElements);
+var _cleanCount = 0;
+var _cleanTimer = setInterval(function () {
+    hideStubbornElements();
+    if (++_cleanCount >= 10) clearInterval(_cleanTimer);
+}, 500);
+</script>
+
+<!-- § 2. 自定义标签页图标（favicon） -->
+<script>
+(function () {
+    var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel  = 'shortcut icon';
+    link.href = 'https://blog-static.cnblogs.com/files/blogs/827007/output.ico?t=1771785298&download=true';
+    document.getElementsByTagName('head')[0].appendChild(link);
+})();
+</script>
+
+<!-- § 3. 正文右侧浮动目录面板 (TOC) - 修复滚动越界问题 -->
+<script>
+$(function () {
+    if (!/\/p\/\d+/.test(window.location.href)) return;
+
+    var postBody = document.getElementById('cnblogs_post_body') || document.getElementById('post_detail') || document.getElementById('mainContent');
+    if (!postBody) return;
+
+    var headings = Array.prototype.slice.call(postBody.querySelectorAll('h2, h3')).filter(function (h) { return h.textContent.trim().length > 0; });
+    if (headings.length < 1) return;
+
+    headings.forEach(function (h, i) { if (!h.id) h.id = 'toc-h-' + i; });
+
+    var panel = document.createElement('div');
+    panel.id  = 'pixyll-toc-panel';
+
+    var title = document.createElement('p');
+    title.className = 'toc-heading';
+    title.textContent = 'Contents';
+    panel.appendChild(title);
+
+    var links = [];
+    headings.forEach(function (h) {
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent.trim();
+        a.className = (h.tagName === 'H3') ? 'toc-h3' : '';
+        a.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.scrollTo({ top: h.getBoundingClientRect().top + window.pageYOffset - 24, behavior: 'smooth' });
+        });
+        panel.appendChild(a);
+        links.push({ el: a, heading: h });
+    });
+
+    document.body.appendChild(panel);
+    // 点击图片隐藏 TOC，再次点击任意处恢复
+    var tocHiddenForImage = false;
+    document.addEventListener('click', function (e) {
+        if (tocHiddenForImage) {
+            // 无论点哪里，第二次点击一律恢复
+            tocHiddenForImage = false;
+            panel.style.removeProperty('display');
+        } else if (e.target.closest && e.target.closest('img')) {
+            tocHiddenForImage = true;
+            panel.style.setProperty('display', 'none', 'important');
+        }
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && tocHiddenForImage) {
+            tocHiddenForImage = false;
+            panel.style.removeProperty('display');
+        }
+    });
+
+    var rafPending = false;
+    function updateActive() {
+        rafPending = false;
+        var scrollTop = window.pageYOffset;
+
+        // 1. 高亮当前阅读的标题
+        var cur = null;
+        headings.forEach(function (h) { if (h.offsetTop <= scrollTop + 80) cur = h; });
+        links.forEach(function (item) { item.el.classList.toggle('toc-active', item.heading === cur); });
+
+        // 2. 限制 TOC 面板不要滚动到 blog_post_info_block
+        var infoBlock = document.getElementById('blog_post_info_block');
+
+        // 获取边界：如果存在 infoBlock，则以它的顶部减去 40px 的间距作为边界；否则退化为正文底部
+        var boundaryBottom = infoBlock 
+            ? (infoBlock.getBoundingClientRect().top + window.pageYOffset - 40) 
+            : (postBody.getBoundingClientRect().bottom + window.pageYOffset);
+
+        var panelHeight = panel.offsetHeight;
+
+        // 如果当前滚动位置 + 120(默认top) + 面板高度 超出了边界，则切换为绝对定位停在边界上方
+        if (scrollTop + 120 + panelHeight > boundaryBottom) {
+            panel.style.setProperty('position', 'absolute', 'important');
+            panel.style.setProperty('top', (boundaryBottom - panelHeight) + 'px', 'important');
+        } else {
+            panel.style.setProperty('position', 'fixed', 'important');
+            panel.style.setProperty('top', '120px', 'important');
+        }
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!rafPending) { rafPending = true; requestAnimationFrame(updateActive); }
+    }, { passive: true });
+
+    updateActive();
+});
+</script>
+
+<!-- § 4. 惯性平滑滚动 -->
+<script>
+(function () {
+    var SPEED = 0.03, WHEEL_MUL = 1.2, current = window.pageYOffset, target = current, ticking = false;
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function loop() {
+        var maxY = Math.max(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight, 0);
+        target = Math.max(0, Math.min(target, maxY));
+        current = lerp(current, target, SPEED);
+        if (Math.abs(target - current) < 0.5) { current = target; ticking = false; window.scrollTo(0, current); return; }
+        window.scrollTo(0, current);
+        requestAnimationFrame(loop);
+    }
+    var isMidScroll = false;
+    window.addEventListener('mousedown', function (e) { if (e.button === 1) { isMidScroll = true; current = target = window.pageYOffset; ticking = false; } });
+    window.addEventListener('mouseup', function (e) { if (e.button === 1) { isMidScroll = false; current = target = window.pageYOffset; } });
+    function onWheel(e) {
+        if (e.ctrlKey || e.metaKey || isMidScroll) return;
+        e.preventDefault();
+        target += ((e.deltaMode === 1) ? e.deltaY * 28 : e.deltaY) * WHEEL_MUL;
+        if (!ticking) { current = window.pageYOffset; ticking = true; requestAnimationFrame(loop); }
+    }
+    window.removeEventListener('wheel', onWheel);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('resize', function () { current = target = window.pageYOffset; });
+    window.addEventListener('scroll', function () { if (!ticking) { current = target = window.pageYOffset; } });
+})();
+</script>
+
+<!-- § 5. 支持 / 反对 内联到 postDesc -->
+<script>
+$(function () {
+    if (!/\/p\/\d+/.test(window.location.href)) return;
+    var postDesc = document.querySelector('.postDesc');
+    if (!postDesc) return;
+
+    function getCount(id) { var el = document.getElementById(id); return el ? (parseInt(el.textContent.trim(), 10) || 0) : 0; }
+    function syncCounts() {
+        var da = document.getElementById('pixyll-digg-a'), ba = document.getElementById('pixyll-bury-a');
+        if (da) da.textContent = '\u652F\u6301(' + getCount('digg_count') + ')';
+        if (ba) ba.textContent = '\u53CD\u5BF9(' + getCount('bury_count') + ')';
+    }
+
+    function buildLinks() {
+        if (document.getElementById('pixyll-inline-digg')) { syncCounts(); return; }
+        var wrap = document.createElement('span'); wrap.id = 'pixyll-inline-digg';
+
+        var diggA = document.createElement('a'); diggA.id = 'pixyll-digg-a'; diggA.href = 'javascript:void(0)';
+        diggA.onclick = function () { var btn = document.querySelector('.diggit input, .diggit'); if (btn) btn.click(); setTimeout(syncCounts, 1500); };
+
+        var sep = document.createElement('span'); sep.textContent = ' ';
+
+        var buryA = document.createElement('a'); buryA.id = 'pixyll-bury-a'; buryA.href = 'javascript:void(0)';
+        buryA.onclick = function () { var btn = document.querySelector('.buryit input, .buryit'); if (btn) btn.click(); setTimeout(syncCounts, 1500); };
+
+        wrap.appendChild(diggA); wrap.appendChild(sep); wrap.appendChild(buryA);
+        var dot = document.createElement('span'); dot.textContent = ' \u00b7 ';
+        postDesc.appendChild(dot); postDesc.appendChild(wrap);
+        syncCounts();
+
+        var divDigg = document.getElementById('div_digg');
+        if (divDigg) new MutationObserver(syncCounts).observe(divDigg, { subtree: true, childList: true, characterData: true });
+    }
+
+    var tried = 0, timer = setInterval(function () {
+        tried++;
+        if (document.getElementById('digg_count')) { clearInterval(timer); buildLinks(); } 
+        else if (tried >= 30) { clearInterval(timer); }
+    }, 200);
+});
+</script>
+
+<!-- § 6. 订阅此文 链接 + RSS 弹窗 -->
+<script>
+$(function () {
+    if (!/\/p\/\d+/.test(window.location.href)) return;
+    var postDesc = document.querySelector('.postDesc');
+    if (!postDesc || document.getElementById('pixyll-rss-a')) return;
+
+    var match = window.location.pathname.match(/^\/([^\/]+)\/p\//);
+    if (!match) return;
+    var rssHref = 'https://www.cnblogs.com/' + match[1] + '/rss';
+
+    var overlay = document.createElement('div'); overlay.id = 'pixyll-rss-overlay';
+    Object.assign(overlay.style, { display: 'none', position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0,0,0,0.18)', zIndex: '99998' });
+
+    var box = document.createElement('div');
+    Object.assign(box.style, { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#fff', padding: '36px 40px 28px', width: '320px', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', fontFamily: '"Playfair Display","Songti SC","SimSun",serif' });
+
+    var title = document.createElement('p'); title.textContent = '\u8BA2\u9605\u6B64\u535A\u5BA2';
+    Object.assign(title.style, { fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 20px 0' });
+
+    var row = document.createElement('div'); Object.assign(row.style, { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' });
+    var input = document.createElement('input'); input.type = 'text'; input.value = rssHref; input.readOnly = true;
+    Object.assign(input.style, { flex: '1', border: '1px solid #ddd', padding: '7px 10px', fontSize: '13px', fontFamily: 'inherit', color: '#555', outline: 'none', boxSizing: 'border-box' });
+
+    var copyBtn = document.createElement('button'); copyBtn.textContent = '\u590D\u5236';
+    Object.assign(copyBtn.style, { border: '1px solid #111', background: '#111', color: '#fff', padding: '7px 14px', fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer', flexShrink: '0' });
+    copyBtn.onclick = function () { input.select(); document.execCommand('copy'); copyBtn.textContent = '\u5DF2\u590D\u5236'; setTimeout(function () { copyBtn.textContent = '\u590D\u5236'; }, 1500); };
+
+    var closeBtn = document.createElement('a'); closeBtn.href = 'javascript:void(0)'; closeBtn.textContent = '\u5173\u95ED';
+    Object.assign(closeBtn.style, { fontSize: '13px', color: '#bbb', textDecoration: 'none', display: 'block', textAlign: 'right' });
+    closeBtn.onclick = function () { overlay.style.display = 'none'; };
+    overlay.onclick = function (e) { if (e.target === overlay) overlay.style.display = 'none'; };
+
+    row.appendChild(input); row.appendChild(copyBtn); box.appendChild(title); box.appendChild(row); box.appendChild(closeBtn); overlay.appendChild(box); document.body.appendChild(overlay);
+
+    var newA = document.createElement('a'); newA.id = 'pixyll-rss-a'; newA.href = 'javascript:void(0)'; newA.textContent = '\u8BA2\u9605\u6B64\u6587';
+    newA.onclick = function () { overlay.style.display = 'block'; };
+    var dot = document.createElement('span'); dot.textContent = ' \u00b7 ';
+    postDesc.appendChild(dot); postDesc.appendChild(newA);
+});
+</script>
+
+<!-- § 7. 页面切换淡入淡出 -->
+<script>
+(function () {
+    var root = document.documentElement;
+    function showPage() { requestAnimationFrame(function () { requestAnimationFrame(function () { root.style.opacity = '1'; }); }); }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', showPage); } else { showPage(); }
+    window.addEventListener('pageshow', function () { showPage(); });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') showPage(); });
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest('a');
+        if (!a || !a.href || a.target === '_blank' || a.href.indexOf('javascript') === 0 || (a.getAttribute('href') || '').indexOf('#') === 0 || a.hostname !== window.location.hostname) return;
+        e.preventDefault(); root.style.opacity = '0'; setTimeout(function () { window.location.href = a.href; }, 240);
+    });
+})();
+</script>
+
+<!-- § 8. 隐藏 .blogStats -->
+<script>
+$(function () { var stats = document.querySelector('.blogStats'); if (stats) stats.style.setProperty('display', 'none', 'important'); });
+</script>
+
+<!-- § 9. 文章页二级导航栏 + 主页分割线 -->
+<script>
+$(function () {
+    var isPost = /\/p\/\d+/.test(window.location.href), header = document.getElementById('header');
+    if (!isPost) {
+        if (header) { var hr = document.createElement('hr'); hr.id = 'pixyll-home-divider'; header.insertAdjacentElement('afterend', hr); }
+        return;
+    }
+
+    var bt = document.getElementById('blogTitle'); if (bt) bt.style.setProperty('display', 'none', 'important');
+    if (!header) return;
+
+    var dateText = '', postDesc = document.querySelector('.postDesc');
+    if (postDesc) { var m = postDesc.textContent.match(/\d{4}[-\/]\d{1,2}[-\/]\d{1,2}/); if (m) dateText = m[0]; }
+
+    var blogName = '', blogTitleEl = document.querySelector('#blogTitle h1 a');
+    if (blogTitleEl) blogName = blogTitleEl.textContent.trim();
+
+    var nav = document.createElement('div'); nav.id = 'pixyll-subnav';
+    var homeA = document.createElement('a'); homeA.href = 'https://www.cnblogs.com/jayzorn-ljz/'; homeA.textContent = '\u2190 \u4e3b\u9875'; nav.appendChild(homeA);
+    if (blogName) { var nameA = document.createElement('a'); nameA.href = 'https://www.cnblogs.com/jayzorn-ljz/'; nameA.textContent = blogName; nav.appendChild(nameA); }
+    if (dateText) { var dateSpan = document.createElement('span'); dateSpan.className = 'subnav-date'; dateSpan.textContent = dateText; nav.appendChild(dateSpan); }
+
+    [{ text: 'GitHub', href: 'https://github.com/JayZorn-LJZ' }, { text: 'X', href: 'https://x.com/jayzorn_ljz' }].forEach(function (item) {
+        var a = document.createElement('a'); a.href = item.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = item.text + ' \u21d7'; nav.appendChild(a);
+    });
+    header.insertAdjacentElement('afterend', nav);
+});
+</script>
+
+<!-- § 10. 主题切换（跟随系统 / 浅色 / 深色） -->
+<script>
+function pixyllSetTheme(theme) {
+    var root = document.documentElement;
+    var STORAGE_KEY = 'pixyll-theme';
+    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+
+    if (theme === 'system') {
+        root.removeAttribute('data-theme');
+    } else {
+        root.setAttribute('data-theme', theme);
+    }
+
+    /* 直接强写背景色，绕过博客园样式表的覆盖 */
+    var isDark = theme === 'dark' ||
+        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var bg = isDark ? '#1a1a1a' : '#ffffff';
+    document.body.style.setProperty('background-color', bg, 'important');
+    root.style.setProperty('background-color', bg, 'important');
+
+    document.querySelectorAll('.pixyll-theme-btn').forEach(function (btn) {
+        btn.setAttribute('data-active', btn.getAttribute('data-t') === theme ? 'true' : 'false');
+    });
+}
+
+(function () {
+    var STORAGE_KEY = 'pixyll-theme';
+    var root = document.documentElement;
+
+    var saved;
+    try { saved = localStorage.getItem(STORAGE_KEY) || 'system'; } catch (e) { saved = 'system'; }
+    if (saved === 'dark')  root.setAttribute('data-theme', 'dark');
+    if (saved === 'light') root.setAttribute('data-theme', 'light');
+
+    /* 刷新时立即强写背景，避免白屏闪烁 */
+    var initDark = saved === 'dark' ||
+        (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var initBg = initDark ? '#1a1a1a' : '#ffffff';
+    root.style.setProperty('background-color', initBg, 'important');
+    /* body 此时可能还未就绪，用 DOMContentLoaded 兜底 */
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.style.setProperty('background-color', initBg, 'important');
+    });
+
+    $(function () {
+        var footer = document.getElementById('footer');
+        if (!footer) return;
+
+        var wrap = document.createElement('div');
+        wrap.id = 'pixyll-theme-switcher';
+        wrap.style.cssText = 'margin-top:14px;display:flex;justify-content:center;gap:20px;';
+
+        [['system','跟随系统'], ['light','浅色'], ['dark','深色']].forEach(function (item) {
+            var btn = document.createElement('button');
+            btn.textContent = item[1];
+            btn.className = 'pixyll-theme-btn';
+            btn.setAttribute('data-t', item[0]);
+            btn.setAttribute('data-active', saved === item[0] ? 'true' : 'false');
+            btn.setAttribute('type', 'button');
+
+            function handler(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                pixyllSetTheme(item[0]);
+            }
+            btn.addEventListener('touchend', handler, { passive: false });
+            btn.addEventListener('click', handler);
+
+            wrap.appendChild(btn);
+        });
+
+        footer.appendChild(wrap);
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+            var cur;
+            try { cur = localStorage.getItem(STORAGE_KEY) || 'system'; } catch (e) { cur = 'system'; }
+            if (cur === 'system') pixyllSetTheme('system');
+        });
+    });
+})();
+</script>

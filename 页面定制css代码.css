@@ -1,0 +1,550 @@
+/* =====================================================
+   Theme : Pixyll Minimalist
+   Author: JayZorn  |  Based on: SimpleMemory
+   ===================================================== */
+
+/* =====================================================
+   § 0. Web 字体
+   ===================================================== */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/index.css");
+
+/* =====================================================
+   § 1. 全局变量
+   ===================================================== */
+:root {
+    --bg-color:     #ffffff;   /* 页面背景 */
+    --text-main:    #333332;   /* 正文文字 */
+    --text-title:   #111111;   /* 标题文字 */
+    --code-bg:      #1e1e1e;   /* 代码块背景 */
+    --accent-color: #d63384;   /* 行内代码高亮色 */
+    --max-width:    1020px;    /* 内容区最大宽度 */
+
+    --font-serif: "Playfair Display", "Songti SC", "SimSun", "STSong", serif;
+    --font-sans:  -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono:  "Consolas", "Monaco", monospace;
+
+    color-scheme: light; /* 强制浅色，不受系统深色模式影响 */
+}
+
+/* =====================================================
+   § 2. 全局基础
+   ===================================================== */
+html, body {
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+    background-color: var(--bg-color) !important;
+}
+
+/* =====================================================
+   § 3. 正文排版
+   ===================================================== */
+#mainContent .postBody,
+#mainContent .postBody h1, #mainContent .postBody h2,
+#mainContent .postBody h3, #mainContent .postBody h4,
+#mainContent .postBody h5, #mainContent .postBody h6,
+#mainContent .postBody p,  #mainContent .postBody ol,
+#mainContent .postBody ul, #mainContent .postBody li,
+#mainContent .postBody span, #mainContent .postBody a {
+    font-family: var(--font-serif) !important;
+    line-height: 1.8 !important;
+    letter-spacing: 0.01em !important;
+    color: var(--text-main) !important;
+    text-indent: 0 !important;
+}
+
+#mainContent .postBody ol,
+#mainContent .postBody ul {
+    margin: 1.5em 0 !important;
+    padding-left: 1.5em !important;
+}
+#mainContent .postBody li { margin-bottom: 0.6em !important; }
+
+#mainContent .postBody h1, #mainContent .postBody h2,
+#mainContent .postBody h3, #mainContent .postBody h4,
+#mainContent .postBody h5, #mainContent .postBody h6 {
+    color: var(--text-title) !important;
+    font-weight: 700 !important;
+    margin: 1.8em 0 0.8em !important;
+    border-bottom: none !important;
+}
+
+#mainContent .postBody,
+#cnblogs_post_body > p:first-child,
+#cnblogs_post_body > h1:first-child,
+#cnblogs_post_body > h2:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* =====================================================
+   § 4. 页面布局
+   ===================================================== */
+@media screen and (min-width: 768px) {
+    #home {
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: left !important;
+    }
+    #main {
+        width: 100% !important;
+        max-width: var(--max-width) !important;
+        padding: 0 20px !important;
+        margin: 40px auto 0 !important;
+        box-sizing: border-box !important;
+        float: none !important;
+    }
+    #forFlow, #mainContent, #mainContent .forFlow {
+        width: 100% !important;
+        float: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+    #mainContent .postBody { padding: 40px 20px !important; font-size: 17px !important; }
+    #mainContent .postBody p, #mainContent .postBody li, #mainContent .postBody span { font-size: 17px !important; }
+    
+    #mainContent .day { margin: 0 !important; padding: 0 !important; border: none !important; }
+    #mainContent .postSeparator { display: none !important; }
+    #mainContent .postTitle { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid #f0f0f0 !important; }
+    #mainContent .day > .postTitle:first-child { margin-top: 0 !important; border-top: none !important; }
+    #mainContent .day + .day { margin-top: 56px !important; }
+    #mainContent .day + .day > .postTitle:first-child { border-top: 1px solid #f0f0f0 !important; }
+}
+
+@media screen and (max-width: 767px) {
+    #main { width: 100% !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; }
+    #forFlow, #mainContent, #mainContent .forFlow { width: 100% !important; float: none !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+    #mainContent .postBody { padding: 10px 15px !important; }
+    #mainContent .postBody, #mainContent .postBody p, #mainContent .postBody ol, #mainContent .postBody ul, #mainContent .postBody li, #mainContent .postBody li p, #mainContent .postBody span { font-size: 15px !important; }
+    #mainContent .postBody ol, #mainContent .postBody ul { padding-left: 1.2em !important; }
+}
+
+/* =====================================================
+   § 5. 代码块
+   ===================================================== */
+#mainContent .postBody pre, #mainContent .postBody code, .cnblogs-post-body pre, .cnblogs-markdown pre {
+    background-color: var(--code-bg) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 20px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+}
+#mainContent .postBody pre span, #mainContent .postBody code span, .hljs, .hljs-keyword, .hljs-string, .hljs-comment, .hljs-operator, .hljs-function, .hljs-title, .hljs-params {
+    color: #ffffff !important;
+    background-color: transparent !important;
+    font-style: normal !important;
+}
+#mainContent .postBody :not(pre) > code {
+    background-color: #f3f4f4 !important;
+    color: var(--accent-color) !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    font-family: inherit !important;
+}
+
+/* =====================================================
+   § 6. 隐藏冗余元素 (修复 dayTitle 隐藏不彻底问题)
+   ===================================================== */
+#topics .postTitle, .entrylistPosttitle, #cb_post_title_url,
+#sideBar, #sideBarMain, #navList, #green_channel, #vip_tip, #BlogPostCategory,
+#commentform_title, #under_post_card1, #under_post_card2, #cnblogs_ch, #blog_c1,
+#tip_comment2, .commentbox_title_right, .p_arrow, .p_puton, .post_top_icon,
+img[src*="zhiding"], span[style*="color: blue"], .pinned-post-mark,
+.dayTitle, .dayTitle a, .dayTitle * {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* =====================================================
+   § 7. 头部
+   ===================================================== */
+#header {
+    margin: 80px auto 60px !important;
+    max-width: var(--max-width) !important;
+    text-align: center !important;
+    padding: 0 20px !important;
+    border: none !important;
+    background: transparent !important;
+}
+#blogTitle h1 { font-family: var(--font-serif) !important; font-size: 42px !important; font-weight: 800 !important; letter-spacing: -1px !important; margin-bottom: 10px !important; }
+#blogTitle h1 a { color: var(--text-title) !important; text-decoration: none !important; }
+#blogTitle h2 { font-family: var(--font-serif) !important; font-size: 18px !important; font-weight: 400 !important; color: #999 !important; margin-top: 5px !important; line-height: 1.5 !important; }
+
+/* =====================================================
+   § 8. 首页文章列表
+   ===================================================== */
+.day { margin: 0 !important; padding: 0 !important; border: none !important; }
+.day + .day { margin-top: 56px !important; }
+.postSeparator { display: none !important; }
+.postTitle { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid #f0f0f0 !important; }
+.day > .postTitle:first-child { margin-top: 0 !important; border-top: none !important; }
+.day + .day > .postTitle:first-child { border-top: 1px solid #f0f0f0 !important; }
+.day .postTitle2, .postTitle2, .entrylistPosttitle, #mainContent .day .postTitle { border-left: none !important; padding-left: 0 !important; margin-left: 0 !important; }
+.postTitle2 { font-family: var(--font-serif) !important; font-size: 26px !important; font-weight: 700 !important; line-height: 1.3 !important; color: var(--text-title) !important; text-decoration: none !important; }
+.postTitle2:hover { color: #817f7f !important; }
+.postTitle2::before, .postTitle2::after, .entrylistPosttitle::before { display: none !important; }
+.postCon, .c_b_p_desc { font-family: var(--font-serif) !important; font-size: 15px !important; line-height: 1.75 !important; color: #888 !important; margin-top: 10px !important; margin-bottom: 0 !important; }
+.c_b_p_desc_readmore { display: inline-block !important; margin-top: 8px !important; font-size: 13px !important; color: #888 !important; font-weight: 400 !important; text-decoration: underline !important; }
+.postDesc { font-family: var(--font-serif) !important; font-size: 12px !important; text-transform: uppercase !important; letter-spacing: 1.5px !important; color: #bbb !important; margin-top: 10px !important; margin-bottom: 0 !important; padding: 0 !important; text-align: left !important; background-image: none !important; border: none !important; }
+.postDesc a { color: #bbb !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
+.postDesc a:hover, .postDesc .post-edit-link:hover { color: #111 !important; border-bottom-color: #111 !important; }
+.postDesc i, .postDesc .iconfont, .postDesc [class*="fa-"], .postDesc .far, .postDesc .fas, .postDesc::before, .postDesc span::before { display: none !important; }
+#post_next_prev, #blog_post_info_block { border-top: none !important; border-bottom: none !important; }
+#blog_post_info_block { margin-top: 150px !important; } /* 增加正文与底部信息块的间距 */
+.pager { font-family: var(--font-serif) !important; margin-top: 50px !important; color: #999 !important; }
+.pager a { border: 1px solid #eee !important; padding: 8px 16px !important; border-radius: 4px !important; color: #333 !important; }
+
+/* 隐藏主页头部与文章列表之间的全局分割线 */
+#pixyll-home-divider { display: none !important; }
+
+/* =====================================================
+   § 9. 评论区 (修复 feedbackManage 和 提交按钮)
+   ===================================================== */
+#comment_nav a, #comment_sort a, #comment_sort span, .comment_vote a, .comment_digg a, .comment_bury a { color: #bbb !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; font-family: var(--font-serif) !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
+#comment_nav a:hover, #comment_sort a:hover, .comment_vote a:hover, .comment_digg a:hover, .comment_bury a:hover { color: #111 !important; border-bottom-color: #111 !important; }
+.comment_vote a, .comment_digg a, .comment_bury a { font-size: 12px !important; }
+#comment_sort .active, #comment_sort span.selected { color: #111 !important; border-bottom-color: #111 !important; }
+.feedback_area_title { font-family: var(--font-serif) !important; }
+/* 缩小评论区整体字号，拉开与正文的视觉层级 */
+.feedbackItem { 
+    font-family: var(--font-serif) !important; 
+    font-size: 15px !important; /* 从 17px 缩小到 15px */
+    line-height: 1.7 !important; /* 行高稍微收紧一点 */
+    letter-spacing: 0.01em !important; 
+    color: var(--text-main) !important; 
+    text-indent: 0 !important; 
+    clear: both !important; 
+}
+
+/* 确保评论正文内的段落也继承这个较小的字号 */
+.blog_comment_body, .blog_comment_body p {
+    font-size: 15px !important;
+}
+/* 修复评论正文中的链接（包括 @ 用户名）为 Pixyll 风格 */
+.blog_comment_body a {
+    color: #111 !important;
+    text-decoration: underline !important;
+    text-underline-offset: 3px !important; /* 让下划线稍微远离文字，更优雅 */
+    transition: color 0.2s ease !important;
+}
+.blog_comment_body a:hover {
+    color: #888 !important; /* 鼠标悬浮时变浅灰 */
+}
+
+/* 修复 feedbackManage 左对齐问题 */
+.feedbackManage { float: right !important; text-align: right !important; }
+
+.feedbackItem .comment_author, .feedbackItem .comment_author a, .feedbackItem .louzhu { color: #000 !important; font-weight: 600 !important; text-decoration: none !important; }
+.feedbackListSubtitle, .feedbackListSubtitle a, .comment_actions a { color: #555 !important; }
+div.commentbox_main, textarea#tbCommentBody, .comment_textarea { border: 1px solid #ddd !important; background-color: #fff !important; border-radius: 0 !important; padding: 12px !important; font-family: var(--font-serif) !important; box-sizing: border-box !important; transition: border-color 0.3s ease-in-out !important; }
+div.commentbox_main:hover, textarea#tbCommentBody:hover, textarea#tbCommentBody:focus { border-color: #000 !important; outline: none !important; }
+div.commentbox_main::before, div.commentbox_main::after { display: none !important; }
+.commentbox_title a, .commentbox_title_left a, .commentbox_title_left .tab_selected, .commentbox_title_left span { font-family: var(--font-serif) !important; color: #000 !important; text-decoration-color: #000 !important; border-bottom-color: #000 !important; font-weight: 500 !important; }
+.commentbox_title_left .tab_selected { border: 1px solid #000 !important; background-color: #fff !important; border-bottom: none !important; }
+.commentbox_title a:hover { color: #666 !important; text-decoration-color: #666 !important; border-bottom-color: #666 !important; }
+.commentbox_title_left { border-bottom: 1px solid #000 !important; }
+
+/* 修复评论框底部选项对齐 */
+#commentbox_opt { display: flex !important; align-items: center !important; gap: 15px !important; font-family: var(--font-serif) !important; color: #000 !important; font-size: 13px !important; margin-top: 10px !important; }
+/* 修复“退出”等底部选项链接的颜色 */
+#commentbox_opt a { 
+    color: #555 !important; /* 明确指定为深灰色，防止变成白色 */
+    text-decoration: none !important; 
+    transition: color 0.3s ease !important; 
+}
+#commentbox_opt a:hover { 
+    color: #000 !important; /* 鼠标悬浮时变纯黑 */
+}
+.inline_middle { font-family: var(--font-serif) !important; }
+
+/* 修复提交按钮被截断问题 */
+#btn_comment_submit {
+    width: auto !important;
+    height: auto !important;
+    line-height: normal !important;
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 1px solid #000 !important;
+    padding: 8px 24px !important;
+    border-radius: 4px !important;
+    font-family: var(--font-serif) !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+#btn_comment_submit:hover { background-color: #333 !important; border-color: #333 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; }
+
+/* =====================================================
+   § 10. 随笔 Digg
+   ===================================================== */
+#div_digg { display: none !important; }
+
+/* =====================================================
+   § 11. 浮动目录面板 (TOC)
+   ===================================================== */
+#pixyll-toc-panel {
+    position: fixed !important; /* 默认 fixed，JS 会在触底时改为 absolute */
+    top: 120px !important;
+    right: 24px !important;
+    width: 200px !important;
+    max-height: calc(100vh - 160px) !important;
+    overflow-y: auto !important;
+    z-index: 9999 !important;
+    background: #ffffff !important;
+    border-left: 2px solid #f0f0f0 !important;
+    padding: 0 0 16px 16px !important;
+    box-sizing: border-box !important;
+}
+#pixyll-toc-panel .toc-heading { font-family: var(--font-serif) !important; font-size: 11px !important; font-weight: 700 !important; letter-spacing: 2.5px !important; text-transform: uppercase !important; color: #bbbbbb !important; margin: 0 0 14px 0 !important; padding: 0 !important; border: none !important; }
+#pixyll-toc-panel a { display: block !important; font-family: var(--font-serif) !important; font-size: 13px !important; line-height: 1.45 !important; color: #aaaaaa !important; text-decoration: none !important; margin-bottom: 10px !important; border-left: 2px solid transparent !important; padding-left: 10px !important; margin-left: -18px !important; transition: color 0.2s ease, border-color 0.2s ease !important; word-break: break-all !important; }
+#pixyll-toc-panel a:hover { color: #444444 !important; border-color: #cccccc !important; }
+#pixyll-toc-panel a.toc-h3 { font-size: 12px !important; padding-left: 22px !important; color: #cccccc !important; }
+#pixyll-toc-panel a.toc-h3:hover { color: #888888 !important; border-color: #cccccc !important; }
+#pixyll-toc-panel a.toc-active { color: #111111 !important; font-weight: 700 !important; border-color: #111111 !important; }
+@media screen and (max-width: 1300px) { #pixyll-toc-panel { display: none !important; } }
+
+/* =====================================================
+   § 12. 页面切换淡入淡出
+   ===================================================== */
+html { opacity: 0; transition: opacity 0.22s ease; }
+
+/* =====================================================
+   § 13. 导航栏
+   ===================================================== */
+#navigator { display: none !important; }
+
+/* =====================================================
+   § 14. 文章页二级导航栏 + 主页分割线 (修复手机端单行显示)
+   ===================================================== */
+#pixyll-subnav {
+    width: 100% !important;
+    max-width: var(--max-width) !important;
+    margin: 0 auto !important;
+    padding: 0 20px 40px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    
+    /* 开启 Flex 横向滚动，保持单行 */
+    display: flex !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important; /* Firefox 隐藏滚动条 */
+}
+#pixyll-subnav::-webkit-scrollbar { display: none !important; } /* Chrome/Safari 隐藏滚动条 */
+
+#pixyll-subnav a, #pixyll-subnav .subnav-date {
+    flex-shrink: 0 !important; /* 防止在手机端被挤压换行 */
+    font-family: var(--font-serif) !important;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    letter-spacing: 1px !important;
+    color: #bbb !important;
+    text-decoration: none !important;
+    margin-right: 20px !important;
+}
+#pixyll-subnav a { border-bottom: 1px solid transparent !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
+#pixyll-subnav a:hover { color: #111 !important; border-bottom-color: #111 !important; }
+
+#pixyll-home-divider { width: 100% !important; max-width: var(--max-width) !important; margin: 0 auto 40px !important; padding: 0 20px !important; box-sizing: border-box !important; border: none !important; border-top: 1px solid #f0f0f0 !important; }
+
+/* =====================================================
+   § 15. 页脚 (Footer) 美化
+   ===================================================== */
+#footer {
+    font-family: var(--font-serif) !important;
+    font-size: 12px !important;
+    color: #999 !important;
+    text-align: center !important;
+    margin: 60px auto 20px !important;
+    padding: 20px 10px !important;
+    border-top: 1px solid #f0f0f0 !important;
+    max-width: var(--max-width) !important;
+    line-height: 1.8 !important;
+}
+#footer a { color: #999 !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; transition: all 0.2s !important; }
+#footer a:hover { color: #333 !important; border-bottom-color: #333 !important; }
+#footer img { display: none !important; } /* 隐藏公安备案图标 */
+
+/* =====================================================
+   § 16. 深色模式适配
+   ===================================================== */
+
+/* ── 系统深色（未强制浅色时生效）── */
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) {
+        --bg-color: #1a1a1a; --text-main: #d4d4d4; --text-title: #f0f0f0;
+        --code-bg: #2d2d2d; --accent-color: #f06292; color-scheme: dark;
+    }
+    html:not([data-theme="light"]) body { background-color: var(--bg-color) !important; }
+    html:not([data-theme="light"]) #mainContent .postTitle,
+    html:not([data-theme="light"]) #mainContent .day + .day > .postTitle:first-child,
+    html:not([data-theme="light"]) .postTitle,
+    html:not([data-theme="light"]) #pixyll-home-divider,
+    html:not([data-theme="light"]) #footer { border-color: #2e2e2e !important; }
+    html:not([data-theme="light"]) .postTitle2 { color: var(--text-title) !important; }
+    html:not([data-theme="light"]) .postTitle2:hover { color: #888 !important; }
+    html:not([data-theme="light"]) .postCon,
+    html:not([data-theme="light"]) .c_b_p_desc { color: #666 !important; }
+    html:not([data-theme="light"]) .postDesc,
+    html:not([data-theme="light"]) .postDesc a { color: #666 !important; }
+    html:not([data-theme="light"]) .postDesc a:hover { color: #bbb !important; border-bottom-color: #bbb !important; }
+    html:not([data-theme="light"]) div.commentbox_main,
+    html:not([data-theme="light"]) textarea#tbCommentBody { background-color: #222 !important; border-color: #333 !important; color: var(--text-main) !important; }
+    html:not([data-theme="light"]) div.commentbox_main:hover,
+    html:not([data-theme="light"]) textarea#tbCommentBody:hover,
+    html:not([data-theme="light"]) textarea#tbCommentBody:focus { border-color: #aaa !important; }
+    html:not([data-theme="light"]) .commentbox_title_left { border-bottom-color: #555 !important; }
+    html:not([data-theme="light"]) .commentbox_title a,
+    html:not([data-theme="light"]) .commentbox_title_left a,
+    html:not([data-theme="light"]) .commentbox_title_left span { color: var(--text-title) !important; }
+    html:not([data-theme="light"]) .commentbox_title_left .tab_selected { border-color: #555 !important; background-color: #1a1a1a !important; }
+    html:not([data-theme="light"]) .blog_comment_body a { color: #ccc !important; }
+    html:not([data-theme="light"]) .blog_comment_body a:hover { color: #888 !important; }
+    html:not([data-theme="light"]) .feedbackItem .comment_author,
+    html:not([data-theme="light"]) .feedbackItem .comment_author a,
+    html:not([data-theme="light"]) .feedbackItem .louzhu { color: #e0e0e0 !important; }
+    html:not([data-theme="light"]) .feedbackListSubtitle,
+    html:not([data-theme="light"]) .feedbackListSubtitle a,
+    html:not([data-theme="light"]) .comment_actions a { color: #888 !important; }
+    html:not([data-theme="light"]) #comment_sort .active,
+    html:not([data-theme="light"]) #comment_sort span.selected { color: #e0e0e0 !important; border-bottom-color: #e0e0e0 !important; }
+    html:not([data-theme="light"]) #commentbox_opt { color: #aaa !important; }
+    html:not([data-theme="light"]) #commentbox_opt a { color: #888 !important; }
+    html:not([data-theme="light"]) #commentbox_opt a:hover { color: #ddd !important; }
+    html:not([data-theme="light"]) #btn_comment_submit { background-color: #333 !important; border-color: #555 !important; }
+    html:not([data-theme="light"]) #btn_comment_submit:hover { background-color: #555 !important; }
+    html:not([data-theme="light"]) .pager a { border-color: #333 !important; color: #aaa !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel { background: #1a1a1a !important; border-left-color: #2e2e2e !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel a { color: #555 !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel a:hover { color: #aaa !important; border-color: #555 !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-h3 { color: #444 !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-h3:hover { color: #888 !important; }
+    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-active { color: #f0f0f0 !important; border-color: #f0f0f0 !important; }
+    html:not([data-theme="light"]) #pixyll-subnav a,
+    html:not([data-theme="light"]) #pixyll-subnav .subnav-date { color: #555 !important; }
+    html:not([data-theme="light"]) #pixyll-subnav a:hover { color: #ddd !important; border-bottom-color: #ddd !important; }
+    html:not([data-theme="light"]) #footer { color: #555 !important; }
+    html:not([data-theme="light"]) #footer a { color: #555 !important; }
+    html:not([data-theme="light"]) #footer a:hover { color: #aaa !important; border-bottom-color: #aaa !important; }
+    html:not([data-theme="light"]) #mainContent .postBody h1,
+    html:not([data-theme="light"]) #mainContent .postBody h2,
+    html:not([data-theme="light"]) #mainContent .postBody h3,
+    html:not([data-theme="light"]) #mainContent .postBody h4,
+    html:not([data-theme="light"]) #mainContent .postBody h5,
+    html:not([data-theme="light"]) #mainContent .postBody h6 { color: var(--text-title) !important; }
+    html:not([data-theme="light"]) #mainContent .postBody a,
+    html:not([data-theme="light"]) #blog_post_info_block a { color: #aaaaaa !important; }
+    html:not([data-theme="light"]) #mainContent .postBody a:hover,
+    html:not([data-theme="light"]) #blog_post_info_block a:hover { color: #dddddd !important; }
+}
+
+/* ── 强制深色（与上方规则完全镜像，通过 data-theme="dark" 触发）── */
+html[data-theme="dark"] {
+    --bg-color: #1a1a1a; --text-main: #d4d4d4; --text-title: #f0f0f0;
+    --code-bg: #2d2d2d; --accent-color: #f06292; color-scheme: dark;
+}
+html[data-theme="dark"] body { background-color: var(--bg-color) !important; }
+html[data-theme="dark"] #mainContent .postTitle,
+html[data-theme="dark"] #mainContent .day + .day > .postTitle:first-child,
+html[data-theme="dark"] .postTitle,
+html[data-theme="dark"] #pixyll-home-divider,
+html[data-theme="dark"] #footer { border-color: #2e2e2e !important; }
+html[data-theme="dark"] .postTitle2 { color: var(--text-title) !important; }
+html[data-theme="dark"] .postTitle2:hover { color: #888 !important; }
+html[data-theme="dark"] .postCon,
+html[data-theme="dark"] .c_b_p_desc { color: #666 !important; }
+html[data-theme="dark"] .postDesc,
+html[data-theme="dark"] .postDesc a { color: #666 !important; }
+html[data-theme="dark"] .postDesc a:hover { color: #bbb !important; border-bottom-color: #bbb !important; }
+html[data-theme="dark"] div.commentbox_main,
+html[data-theme="dark"] textarea#tbCommentBody { background-color: #222 !important; border-color: #333 !important; color: var(--text-main) !important; }
+html[data-theme="dark"] div.commentbox_main:hover,
+html[data-theme="dark"] textarea#tbCommentBody:hover,
+html[data-theme="dark"] textarea#tbCommentBody:focus { border-color: #aaa !important; }
+html[data-theme="dark"] .commentbox_title_left { border-bottom-color: #555 !important; }
+html[data-theme="dark"] .commentbox_title a,
+html[data-theme="dark"] .commentbox_title_left a,
+html[data-theme="dark"] .commentbox_title_left span { color: var(--text-title) !important; }
+html[data-theme="dark"] .commentbox_title_left .tab_selected { border-color: #555 !important; background-color: #1a1a1a !important; }
+html[data-theme="dark"] .blog_comment_body a { color: #ccc !important; }
+html[data-theme="dark"] .blog_comment_body a:hover { color: #888 !important; }
+html[data-theme="dark"] .feedbackItem .comment_author,
+html[data-theme="dark"] .feedbackItem .comment_author a,
+html[data-theme="dark"] .feedbackItem .louzhu { color: #e0e0e0 !important; }
+html[data-theme="dark"] .feedbackListSubtitle,
+html[data-theme="dark"] .feedbackListSubtitle a,
+html[data-theme="dark"] .comment_actions a { color: #888 !important; }
+html[data-theme="dark"] #comment_sort .active,
+html[data-theme="dark"] #comment_sort span.selected { color: #e0e0e0 !important; border-bottom-color: #e0e0e0 !important; }
+html[data-theme="dark"] #commentbox_opt { color: #aaa !important; }
+html[data-theme="dark"] #commentbox_opt a { color: #888 !important; }
+html[data-theme="dark"] #commentbox_opt a:hover { color: #ddd !important; }
+html[data-theme="dark"] #btn_comment_submit { background-color: #333 !important; border-color: #555 !important; }
+html[data-theme="dark"] #btn_comment_submit:hover { background-color: #555 !important; }
+html[data-theme="dark"] .pager a { border-color: #333 !important; color: #aaa !important; }
+html[data-theme="dark"] #pixyll-toc-panel { background: #1a1a1a !important; border-left-color: #2e2e2e !important; }
+html[data-theme="dark"] #pixyll-toc-panel a { color: #555 !important; }
+html[data-theme="dark"] #pixyll-toc-panel a:hover { color: #aaa !important; border-color: #555 !important; }
+html[data-theme="dark"] #pixyll-toc-panel a.toc-h3 { color: #444 !important; }
+html[data-theme="dark"] #pixyll-toc-panel a.toc-h3:hover { color: #888 !important; }
+html[data-theme="dark"] #pixyll-toc-panel a.toc-active { color: #f0f0f0 !important; border-color: #f0f0f0 !important; }
+html[data-theme="dark"] #pixyll-subnav a,
+html[data-theme="dark"] #pixyll-subnav .subnav-date { color: #555 !important; }
+html[data-theme="dark"] #pixyll-subnav a:hover { color: #ddd !important; border-bottom-color: #ddd !important; }
+html[data-theme="dark"] #footer { color: #555 !important; }
+html[data-theme="dark"] #footer a { color: #555 !important; }
+html[data-theme="dark"] #footer a:hover { color: #aaa !important; border-bottom-color: #aaa !important; }
+html[data-theme="dark"] #mainContent .postBody h1,
+html[data-theme="dark"] #mainContent .postBody h2,
+html[data-theme="dark"] #mainContent .postBody h3,
+html[data-theme="dark"] #mainContent .postBody h4,
+html[data-theme="dark"] #mainContent .postBody h5,
+html[data-theme="dark"] #mainContent .postBody h6 { color: var(--text-title) !important; }
+html[data-theme="dark"] #mainContent .postBody a,
+html[data-theme="dark"] #blog_post_info_block a { color: #aaaaaa !important; }
+html[data-theme="dark"] #mainContent .postBody a:hover,
+html[data-theme="dark"] #blog_post_info_block a:hover { color: #dddddd !important; }
+
+/* =====================================================
+   § 17. 主题切换按钮
+   ===================================================== */
+.pixyll-theme-btn {
+    font-family: var(--font-serif) !important;
+    font-size: 12px !important;
+    letter-spacing: 1px !important;
+    color: #bbb !important;
+    text-decoration: none !important;
+    border: none !important;
+    border-bottom: 1px solid transparent !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transition: color 0.2s ease, border-bottom-color 0.2s ease !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+}
+.pixyll-theme-btn:hover { color: #555 !important; border-bottom-color: #555 !important; }
+.pixyll-theme-btn[data-active="true"] { color: #333 !important; border-bottom-color: #333 !important; font-weight: 600 !important; }
+
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) .pixyll-theme-btn:hover,
+    html:not([data-theme="light"]) .pixyll-theme-btn[data-active="true"] { color: #ddd !important; border-bottom-color: #ddd !important; }
+}
+html[data-theme="dark"] .pixyll-theme-btn:hover,
+html[data-theme="dark"] .pixyll-theme-btn[data-active="true"] { color: #ddd !important; border-bottom-color: #ddd !important; }
