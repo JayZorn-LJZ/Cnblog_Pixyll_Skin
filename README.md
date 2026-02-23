@@ -1,6 +1,8 @@
 # Cnblog_Pixyll_Skin
 博客园中基于SimpleMemory皮肤的仿Pixyll主题皮肤
 
+> 注：latest分支功能最新最多，可以看看
+
 # Pixyll皮肤更换教程
 
 1. 在博客园账号后台的设置页面中的“基本设置”中，设置博客皮肤为SimpleMemory
