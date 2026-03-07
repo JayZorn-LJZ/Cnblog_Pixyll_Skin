@@ -1,43 +1,94 @@
-/* =====================================================
-   Theme : Pixyll Minimalist
-   Author: JayZorn  |  Based on: SimpleMemory
-   ===================================================== */
+/* =============================================================================
+   Theme  : Pixyll Minimalist
+   Author : JayZorn  |  Base: SimpleMemory (cnblogs)
 
-/* =====================================================
-   § 0. Web 字体
-   ===================================================== */
+   目录
+   §0   Web 字体
+   §1   全局 CSS 变量（含深色模式覆盖）
+   §2   全局基础样式
+   §3   正文排版（postBody）
+   §4   响应式布局
+   §5   代码块
+   §6   隐藏默认 UI 元素
+   §7   头部 Header
+   §8   文章列表 & 元信息栏（postDesc）
+   §9   评论区
+   §10  Digg 支持/反对
+   §11  浮动目录 TOC
+   §12  页面过渡动画
+   §13  导航栏
+   §14  二级导航 & 分割线
+   §15  页脚
+   §16  深色模式补充规则
+   §17  主题切换按钮
+   §18  图片查看器 Lightbox
+   ============================================================================= */
+
+
+/* §0 ── Web 字体
+   ─ font-display:swap 由 fontsource 内部处理，加载期间回退到系统衬线字体
+   ============================================================================= */
 @import url("https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5/index.css");
 
-/* =====================================================
-   § 1. 全局变量
-   ===================================================== */
+
+/* §1 ── 全局 CSS 变量
+   ─ 所有颜色、字体、布局尺寸均集中于此
+   ─ 深色模式（html.px-dark）只需在此覆盖变量，大多数元素自动适应
+   ============================================================================= */
 :root {
-    --bg-color:     #ffffff;   /* 页面背景 */
-    --text-main:    #333332;   /* 正文文字 */
-    --text-title:   #111111;   /* 标题文字 */
-    --code-bg:      #1e1e1e;   /* 代码块背景 */
-    --accent-color: #d63384;   /* 行内代码高亮色 */
-    --max-width:    1020px;    /* 内容区最大宽度 */
+    /* 主色 */
+    --bg:      #ffffff;   /* 页面背景 */
+    --text:    #333332;   /* 正文 */
+    --title:   #111111;   /* 标题 */
+    /* 辅助色 */
+    --muted:   #bbb;      /* 次要文字（元信息、TOC 等） */
+    --faint:   #999;      /* 更淡文字（页脚、翻页等） */
+    --border:  #f0f0f0;   /* 分割线 */
+    /* 功能色 */
+    --code-bg: #1e1e1e;   /* 代码块背景 */
+    --accent:  #d63384;   /* 行内代码高亮色 */
 
-    --font-serif: "Playfair Display", "Songti SC", "SimSun", "STSong", serif;
-    --font-sans:  -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    --font-mono:  "Consolas", "Monaco", monospace;
+    /* 字体栈 */
+    --serif: "Playfair Display", "Songti SC", "SimSun", "STSong", serif;
+    --sans:  -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --mono:  "Consolas", "Monaco", monospace;
 
-    color-scheme: light; /* 强制浅色，不受系统深色模式影响 */
+    /* 布局 */
+    --max-w:   1020px;    /* 页面最大宽度 */
+    --lb-blur: 8px;       /* Lightbox 背景模糊强度（4px 轻 ~ 20px 强） */
 }
 
-/* =====================================================
-   § 2. 全局基础
-   ===================================================== */
+/* 深色模式：仅覆盖变量，大多数颜色规则自动跟随 */
+html.px-dark {
+    --bg:      #1a1a1a;
+    --text:    #d4d4d4;
+    --title:   #f0f0f0;
+    --muted:   #555;
+    --faint:   #555;
+    --border:  #2e2e2e;
+    --code-bg: #2d2d2d;
+    --accent:  #f06292;
+    color-scheme: dark;
+}
+
+
+/* §2 ── 全局基础
+   ─ 禁止移动端字体自动缩放；背景色跟随变量
+   ============================================================================= */
 html, body {
     -webkit-text-size-adjust: 100% !important;
-    text-size-adjust: 100% !important;
-    background-color: var(--bg-color) !important;
+    text-size-adjust:         100% !important;
+    background-color: var(--bg) !important;
 }
 
-/* =====================================================
-   § 3. 正文排版
-   ===================================================== */
+
+/* §3 ── 正文排版（postBody）
+   ─ 对 postBody 内所有文字元素统一字体 / 行高 / 颜色
+   ─ ⚠ 此处 specificity 较低，postBody span 的 font-size 会被 §8
+   ─   双 id 选择器规则覆盖，见 §8「精准覆盖」注释
+   ============================================================================= */
+
+/* 通用字体、行高、颜色 */
 #mainContent .postBody,
 #mainContent .postBody h1, #mainContent .postBody h2,
 #mainContent .postBody h3, #mainContent .postBody h4,
@@ -45,506 +96,682 @@ html, body {
 #mainContent .postBody p,  #mainContent .postBody ol,
 #mainContent .postBody ul, #mainContent .postBody li,
 #mainContent .postBody span, #mainContent .postBody a {
-    font-family: var(--font-serif) !important;
-    line-height: 1.8 !important;
+    font-family:    var(--serif) !important;
+    line-height:    1.8 !important;
     letter-spacing: 0.01em !important;
-    color: var(--text-main) !important;
-    text-indent: 0 !important;
+    color:          var(--text) !important;
+    text-indent:    0 !important;
 }
 
+/* 列表缩进 */
 #mainContent .postBody ol,
-#mainContent .postBody ul {
-    margin: 1.5em 0 !important;
-    padding-left: 1.5em !important;
-}
-#mainContent .postBody li { margin-bottom: 0.6em !important; }
+#mainContent .postBody ul { margin: 1.5em 0 !important; padding-left: 1.5em !important; }
+#mainContent .postBody li  { margin-bottom: 0.6em !important; }
 
+/* 标题：加粗 + 间距，取消默认底部边框 */
 #mainContent .postBody h1, #mainContent .postBody h2,
 #mainContent .postBody h3, #mainContent .postBody h4,
 #mainContent .postBody h5, #mainContent .postBody h6 {
-    color: var(--text-title) !important;
-    font-weight: 700 !important;
-    margin: 1.8em 0 0.8em !important;
+    color:        var(--title) !important;
+    font-weight:  700 !important;
+    margin:       1.8em 0 0.8em !important;
     border-bottom: none !important;
 }
 
+/* 消除正文顶部多余间距 */
 #mainContent .postBody,
-#cnblogs_post_body > p:first-child,
-#cnblogs_post_body > h1:first-child,
-#cnblogs_post_body > h2:first-child {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
+#cnblogs_post_body > :first-child { margin-top: 0 !important; padding-top: 0 !important; }
 
-/* =====================================================
-   § 4. 页面布局
-   ===================================================== */
+
+/* §4 ── 响应式布局
+   ─ 桌面（≥768px）：flex 居中；移动（<768px）：两侧 22px 边距
+   ============================================================================= */
 @media screen and (min-width: 768px) {
     #home {
         max-width: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        text-align: left !important;
+        display: flex !important; flex-direction: column !important;
+        align-items: center !important; text-align: left !important;
     }
     #main {
-        width: 100% !important;
-        max-width: var(--max-width) !important;
-        padding: 0 20px !important;
-        margin: 40px auto 0 !important;
-        box-sizing: border-box !important;
-        float: none !important;
+        width: 100% !important; max-width: var(--max-w) !important;
+        padding: 0 20px !important; margin: 40px auto 0 !important;
+        box-sizing: border-box !important; float: none !important;
     }
     #forFlow, #mainContent, #mainContent .forFlow {
-        width: 100% !important;
-        float: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
+        width: 100% !important; float: none !important;
+        margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;
     }
+    /* 正文内边距与字号 */
     #mainContent .postBody { padding: 40px 20px !important; font-size: 17px !important; }
-    #mainContent .postBody p, #mainContent .postBody li, #mainContent .postBody span { font-size: 17px !important; }
-    
-    #mainContent .day { margin: 0 !important; padding: 0 !important; border: none !important; }
-    #mainContent .postSeparator { display: none !important; }
-    #mainContent .postTitle { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid #f0f0f0 !important; }
-    #mainContent .day > .postTitle:first-child { margin-top: 0 !important; border-top: none !important; }
-    #mainContent .day + .day { margin-top: 56px !important; }
-    #mainContent .day + .day > .postTitle:first-child { border-top: 1px solid #f0f0f0 !important; }
+    #mainContent .postBody p,
+    #mainContent .postBody li,
+    #mainContent .postBody span { font-size: 17px !important; }
+    /* 文章列表间距 */
+    #mainContent .day {
+        margin: 0 !important; padding: 0 !important; border: none !important;
+        max-width: 680px !important; margin-left: auto !important; margin-right: auto !important;
+    }
+    #mainContent .postSeparator                        { display: none !important; }
+    #mainContent .postTitle                            { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid var(--border) !important; }
+    #mainContent .day > .postTitle:first-child         { margin-top: 0 !important; border-top: none !important; }
+    #mainContent .day + .day                           { margin-top: 56px !important; }
+    #mainContent .day + .day > .postTitle:first-child  { border-top: 1px solid var(--border) !important; }
 }
 
 @media screen and (max-width: 767px) {
-    #main { width: 100% !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; }
-    #forFlow, #mainContent, #mainContent .forFlow { width: 100% !important; float: none !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
-    #mainContent .postBody { padding: 10px 15px !important; }
-    #mainContent .postBody, #mainContent .postBody p, #mainContent .postBody ol, #mainContent .postBody ul, #mainContent .postBody li, #mainContent .postBody li p, #mainContent .postBody span { font-size: 15px !important; }
-    #mainContent .postBody ol, #mainContent .postBody ul { padding-left: 1.2em !important; }
+    #main { width: 100% !important; padding: 0 22px !important; margin: 0 auto !important; box-sizing: border-box !important; }
+    #forFlow, #mainContent, #mainContent .forFlow {
+        width: 100% !important; float: none !important;
+        margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;
+    }
+    #mainContent .postBody { padding: 10px 0 !important; }
+    #mainContent .postBody,
+    #mainContent .postBody p, #mainContent .postBody ol, #mainContent .postBody ul,
+    #mainContent .postBody li, #mainContent .postBody li p,
+    #mainContent .postBody span { font-size: 15px !important; }
+    #mainContent .postBody ol,
+    #mainContent .postBody ul { padding-left: 1.2em !important; }
 }
 
-/* =====================================================
-   § 5. 代码块
-   ===================================================== */
-#mainContent .postBody pre, #mainContent .postBody code, .cnblogs-post-body pre, .cnblogs-markdown pre {
+
+/* §5 ── 代码块
+   ─ 块级（pre/code）：深色背景 + 全白字；行内 code：浅背景 + accent 色
+   ============================================================================= */
+
+/* 块级代码 */
+#mainContent .postBody pre,
+#mainContent .postBody code,
+.cnblogs-post-body pre,
+.cnblogs-markdown pre {
     background-color: var(--code-bg) !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 4px !important;
-    padding: 20px !important;
-    font-family: var(--font-mono) !important;
-    font-size: 14px !important;
-    line-height: 1.6 !important;
+    color:            #fff !important;
+    border:           none !important;
+    border-radius:    4px !important;
+    padding:          20px !important;
+    font-family:      var(--mono) !important;
+    font-size:        14px !important;
+    line-height:      1.6 !important;
 }
-#mainContent .postBody pre span, #mainContent .postBody code span, .hljs, .hljs-keyword, .hljs-string, .hljs-comment, .hljs-operator, .hljs-function, .hljs-title, .hljs-params {
-    color: #ffffff !important;
+
+/* hljs token 统一白色，防止高亮插件乱色 */
+#mainContent .postBody pre span,
+#mainContent .postBody code span,
+.hljs, .hljs-keyword, .hljs-string, .hljs-comment,
+.hljs-operator, .hljs-function, .hljs-title, .hljs-params {
+    color:            #fff !important;
     background-color: transparent !important;
-    font-style: normal !important;
+    font-style:       normal !important;
 }
+
+/* 行内代码 */
 #mainContent .postBody :not(pre) > code {
     background-color: #f3f4f4 !important;
-    color: var(--accent-color) !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-family: inherit !important;
+    color:            var(--accent) !important;
+    padding:          2px 4px !important;
+    border-radius:    3px !important;
+    font-family:      inherit !important;
 }
 
-/* =====================================================
-   § 6. 隐藏冗余元素 (修复 dayTitle 隐藏不彻底问题)
-   ===================================================== */
+
+/* §6 ── 隐藏默认 UI 元素
+   ─ 侧边栏、日期标题、推广栏等博客园默认 UI
+   ─ 仅需 display:none，无需额外清零尺寸/透明度
+   ============================================================================= */
 #topics .postTitle, .entrylistPosttitle, #cb_post_title_url,
-#sideBar, #sideBarMain, #navList, #green_channel, #vip_tip, #BlogPostCategory,
-#commentform_title, #under_post_card1, #under_post_card2, #cnblogs_ch, #blog_c1,
-#tip_comment2, .commentbox_title_right, .p_arrow, .p_puton, .post_top_icon,
+#sideBar, #sideBarMain, #navList,
+#green_channel, #vip_tip, #BlogPostCategory,
+#commentform_title, #under_post_card1, #under_post_card2,
+#cnblogs_ch, #blog_c1, #tip_comment2,
+.commentbox_title_right, .p_arrow, .p_puton, .post_top_icon,
 img[src*="zhiding"], span[style*="color: blue"], .pinned-post-mark,
 .dayTitle, .dayTitle a, .dayTitle * {
     display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
-/* =====================================================
-   § 7. 头部
-   ===================================================== */
+
+/* §7 ── 头部 Header
+   ============================================================================= */
 #header {
-    margin: 80px auto 60px !important;
-    max-width: var(--max-width) !important;
+    margin:     80px auto 60px !important;
+    max-width:  var(--max-w) !important;
     text-align: center !important;
-    padding: 0 20px !important;
-    border: none !important;
+    padding:    0 20px !important;
+    border:     none !important;
     background: transparent !important;
 }
-#blogTitle h1 { font-family: var(--font-serif) !important; font-size: 42px !important; font-weight: 800 !important; letter-spacing: -1px !important; margin-bottom: 10px !important; }
-#blogTitle h1 a { color: var(--text-title) !important; text-decoration: none !important; }
-#blogTitle h2 { font-family: var(--font-serif) !important; font-size: 18px !important; font-weight: 400 !important; color: #999 !important; margin-top: 5px !important; line-height: 1.5 !important; }
+#blogTitle h1 {
+    font-family:    var(--serif) !important;
+    font-size:      42px !important;
+    font-weight:    800 !important;
+    letter-spacing: -1px !important;
+    margin-bottom:  10px !important;
+}
+#blogTitle h1 a { color: var(--title) !important; text-decoration: none !important; }
+#blogTitle h2 {
+    font-family: var(--serif) !important;
+    font-size:   18px !important;
+    font-weight: 400 !important;
+    color:       var(--faint) !important;
+    margin-top:  5px !important;
+    line-height: 1.5 !important;
+}
 
-/* =====================================================
-   § 8. 首页文章列表
-   ===================================================== */
+
+/* §8 ── 文章列表 & 元信息栏（postDesc）
+   ============================================================================= */
+
+/* ── 文章块间距 & 分隔线 ── */
 .day { margin: 0 !important; padding: 0 !important; border: none !important; }
 .day + .day { margin-top: 56px !important; }
 .postSeparator { display: none !important; }
-.postTitle { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid #f0f0f0 !important; }
-.day > .postTitle:first-child { margin-top: 0 !important; border-top: none !important; }
-.day + .day > .postTitle:first-child { border-top: 1px solid #f0f0f0 !important; }
-.day .postTitle2, .postTitle2, .entrylistPosttitle, #mainContent .day .postTitle { border-left: none !important; padding-left: 0 !important; margin-left: 0 !important; }
-.postTitle2 { font-family: var(--font-serif) !important; font-size: 26px !important; font-weight: 700 !important; line-height: 1.3 !important; color: var(--text-title) !important; text-decoration: none !important; }
-.postTitle2:hover { color: #817f7f !important; }
-.postTitle2::before, .postTitle2::after, .entrylistPosttitle::before { display: none !important; }
-.postCon, .c_b_p_desc { font-family: var(--font-serif) !important; font-size: 15px !important; line-height: 1.75 !important; color: #888 !important; margin-top: 10px !important; margin-bottom: 0 !important; }
-.c_b_p_desc_readmore { display: inline-block !important; margin-top: 8px !important; font-size: 13px !important; color: #888 !important; font-weight: 400 !important; text-decoration: underline !important; }
-.postDesc { font-family: var(--font-serif) !important; font-size: 12px !important; text-transform: uppercase !important; letter-spacing: 1.5px !important; color: #bbb !important; margin-top: 10px !important; margin-bottom: 0 !important; padding: 0 !important; text-align: left !important; background-image: none !important; border: none !important; }
-.postDesc a { color: #bbb !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
-.postDesc a:hover, .postDesc .post-edit-link:hover { color: #111 !important; border-bottom-color: #111 !important; }
-.postDesc i, .postDesc .iconfont, .postDesc [class*="fa-"], .postDesc .far, .postDesc .fas, .postDesc::before, .postDesc span::before { display: none !important; }
-#post_next_prev, #blog_post_info_block { border-top: none !important; border-bottom: none !important; }
-#blog_post_info_block { margin-top: 150px !important; } /* 增加正文与底部信息块的间距 */
-.pager { font-family: var(--font-serif) !important; margin-top: 50px !important; color: #999 !important; }
-.pager a { border: 1px solid #eee !important; padding: 8px 16px !important; border-radius: 4px !important; color: #333 !important; }
+.postTitle { margin-top: 56px !important; padding-top: 20px !important; border-top: 1px solid var(--border) !important; }
+.day > .postTitle:first-child           { margin-top: 0 !important; border-top: none !important; }
+.day + .day > .postTitle:first-child    { border-top: 1px solid var(--border) !important; }
 
-/* 隐藏主页头部与文章列表之间的全局分割线 */
+/* 重置博客园默认标题左边框/缩进 */
+.day .postTitle2, .postTitle2, .entrylistPosttitle,
+#mainContent .day .postTitle { border-left: none !important; padding-left: 0 !important; margin-left: 0 !important; }
+
+/* 文章标题链接 */
+.postTitle2 {
+    font-family:     var(--serif) !important;
+    font-size:       26px !important;
+    font-weight:     700 !important;
+    line-height:     1.3 !important;
+    color:           var(--title) !important;
+    text-decoration: none !important;
+}
+.postTitle2:hover { color: #817f7f !important; }
+.postTitle2::before, .postTitle2::after,
+.entrylistPosttitle::before { display: none !important; }
+
+/* 摘要 */
+.postCon, .c_b_p_desc {
+    font-family:   var(--serif) !important;
+    font-size:     15px !important;
+    line-height:   1.75 !important;
+    color:         #888 !important;
+    margin-top:    10px !important;
+    margin-bottom: 0 !important;
+}
+.c_b_p_desc_readmore {
+    display:         inline-block !important;
+    margin-top:      8px !important;
+    font-size:       13px !important;
+    color:           #888 !important;
+    font-weight:     400 !important;
+    text-decoration: underline !important;
+}
+
+/* 元信息栏（日期 / 阅读量 / 评论数 / CC 许可 / Digg 等）
+   ⚠ .postDesc * 的 font-size:12px 会被 §3 中
+     #mainContent .postBody span { font-size:17px } 以更高 specificity 覆盖，
+     因此 post-date / digg 等元素需用下方「精准覆盖」单独处理 */
+.postDesc, .postDesc span, .postDesc a, .postDesc * {
+    font-family:          var(--serif) !important;
+    font-size:            12px !important;
+    color:                var(--muted) !important;
+    line-height:          1.8 !important;
+    letter-spacing:       0.2px !important;
+    margin-top:           10px !important;
+    margin-bottom:        0 !important;
+    padding:              0 !important;
+    text-align:           left !important;
+    background-image:     none !important;
+    border:               none !important;
+    text-transform:       none !important;
+    font-variant-numeric: normal !important;
+    font-feature-settings: normal !important;
+}
+.postDesc a { text-decoration: none !important; transition: color 0.25s ease !important; }
+.postDesc a:hover, .postDesc .post-edit-link:hover { color: #111 !important; }
+
+/* 隐藏元信息中的 icon 图标 */
+.postDesc i, .postDesc .iconfont,
+.postDesc [class*="fa-"], .postDesc .far, .postDesc .fas,
+.postDesc::before, .postDesc span::before { display: none !important; }
+
+/* 精准覆盖：双 id 选择器（specificity 0-2-1）放在 CSS 末段，确保优先级高于 §3 */
+#blog_post_info_block span#post-date,
+#blog_post_info_block span#post_view_count,
+#blog_post_info_block span#post_comment_count,
+#blog_post_info_block span#pixyll-cc,
+#pixyll-inline-digg, #pixyll-digg-a, #pixyll-bury-a {
+    font-family:          var(--serif) !important;
+    font-size:            12px !important;
+    color:                var(--muted) !important;
+    text-decoration:      none !important;
+    font-variant-numeric: normal !important;
+    font-feature-settings: normal !important;
+}
+
+/* 底部信息块间距 */
+#post_next_prev,
+#blog_post_info_block { border: none !important; }
+#blog_post_info_block { margin-top: 28px !important; margin-bottom: 80px !important; }
+
+/* 翻页按钮 */
+.pager { font-family: var(--serif) !important; margin-top: 50px !important; color: var(--faint) !important; }
+.pager a {
+    border: 1px solid var(--border) !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    color: var(--text) !important;
+}
+
+/* 主页分割线（JS 动态创建，默认隐藏） */
 #pixyll-home-divider { display: none !important; }
 
-/* =====================================================
-   § 9. 评论区 (修复 feedbackManage 和 提交按钮)
-   ===================================================== */
-#comment_nav a, #comment_sort a, #comment_sort span, .comment_vote a, .comment_digg a, .comment_bury a { color: #bbb !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; font-family: var(--font-serif) !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
-#comment_nav a:hover, #comment_sort a:hover, .comment_vote a:hover, .comment_digg a:hover, .comment_bury a:hover { color: #111 !important; border-bottom-color: #111 !important; }
+
+/* §9 ── 评论区
+   ============================================================================= */
+
+/* 排序 / 投票链接 */
+#comment_nav a, #comment_sort a, #comment_sort span,
+.comment_vote a, .comment_digg a, .comment_bury a {
+    color:           var(--muted) !important;
+    text-decoration: none !important;
+    border-bottom:   1px solid transparent !important;
+    font-family:     var(--serif) !important;
+    transition:      color 0.25s ease, border-bottom-color 0.25s ease !important;
+}
+#comment_nav a:hover, #comment_sort a:hover,
+.comment_vote a:hover, .comment_digg a:hover,
+.comment_bury a:hover { color: #111 !important; border-bottom-color: #111 !important; }
 .comment_vote a, .comment_digg a, .comment_bury a { font-size: 12px !important; }
-#comment_sort .active, #comment_sort span.selected { color: #111 !important; border-bottom-color: #111 !important; }
-.feedback_area_title { font-family: var(--font-serif) !important; }
-/* 缩小评论区整体字号，拉开与正文的视觉层级 */
-.feedbackItem { 
-    font-family: var(--font-serif) !important; 
-    font-size: 15px !important; /* 从 17px 缩小到 15px */
-    line-height: 1.7 !important; /* 行高稍微收紧一点 */
-    letter-spacing: 0.01em !important; 
-    color: var(--text-main) !important; 
-    text-indent: 0 !important; 
-    clear: both !important; 
-}
 
-/* 确保评论正文内的段落也继承这个较小的字号 */
-.blog_comment_body, .blog_comment_body p {
-    font-size: 15px !important;
+/* 当前激活的排序标签 */
+#comment_sort .active,
+#comment_sort span.selected { color: #111 !important; border-bottom-color: #111 !important; }
+
+/* 评论区标题 */
+.feedback_area_title { font-family: var(--serif) !important; }
+
+/* 评论条目 */
+.feedbackItem {
+    font-family:    var(--serif) !important;
+    font-size:      15px !important;
+    line-height:    1.7 !important;
+    letter-spacing: 0.01em !important;
+    color:          var(--text) !important;
+    text-indent:    0 !important;
+    clear:          both !important;
 }
-/* 修复评论正文中的链接（包括 @ 用户名）为 Pixyll 风格 */
+.blog_comment_body,
+.blog_comment_body p { font-size: 15px !important; }
 .blog_comment_body a {
-    color: #111 !important;
-    text-decoration: underline !important;
-    text-underline-offset: 3px !important; /* 让下划线稍微远离文字，更优雅 */
-    transition: color 0.2s ease !important;
+    color:                 #111 !important;
+    text-decoration:       underline !important;
+    text-underline-offset: 3px !important;
+    transition:            color 0.2s ease !important;
 }
-.blog_comment_body a:hover {
-    color: #888 !important; /* 鼠标悬浮时变浅灰 */
-}
-
-/* 修复 feedbackManage 左对齐问题 */
+.blog_comment_body a:hover { color: #888 !important; }
 .feedbackManage { float: right !important; text-align: right !important; }
 
-.feedbackItem .comment_author, .feedbackItem .comment_author a, .feedbackItem .louzhu { color: #000 !important; font-weight: 600 !important; text-decoration: none !important; }
-.feedbackListSubtitle, .feedbackListSubtitle a, .comment_actions a { color: #555 !important; }
-div.commentbox_main, textarea#tbCommentBody, .comment_textarea { border: 1px solid #ddd !important; background-color: #fff !important; border-radius: 0 !important; padding: 12px !important; font-family: var(--font-serif) !important; box-sizing: border-box !important; transition: border-color 0.3s ease-in-out !important; }
-div.commentbox_main:hover, textarea#tbCommentBody:hover, textarea#tbCommentBody:focus { border-color: #000 !important; outline: none !important; }
-div.commentbox_main::before, div.commentbox_main::after { display: none !important; }
-.commentbox_title a, .commentbox_title_left a, .commentbox_title_left .tab_selected, .commentbox_title_left span { font-family: var(--font-serif) !important; color: #000 !important; text-decoration-color: #000 !important; border-bottom-color: #000 !important; font-weight: 500 !important; }
-.commentbox_title_left .tab_selected { border: 1px solid #000 !important; background-color: #fff !important; border-bottom: none !important; }
-.commentbox_title a:hover { color: #666 !important; text-decoration-color: #666 !important; border-bottom-color: #666 !important; }
+/* 评论作者 */
+.feedbackItem .comment_author,
+.feedbackItem .comment_author a,
+.feedbackItem .louzhu { color: #000 !important; font-weight: 600 !important; text-decoration: none !important; }
+.feedbackListSubtitle, .feedbackListSubtitle a,
+.comment_actions a { color: #555 !important; }
+
+/* 评论输入框 */
+div.commentbox_main, textarea#tbCommentBody, .comment_textarea {
+    border:           1px solid #ddd !important;
+    background-color: var(--bg) !important;
+    border-radius:    0 !important;
+    padding:          12px !important;
+    font-family:      var(--serif) !important;
+    box-sizing:       border-box !important;
+    transition:       border-color 0.3s ease !important;
+}
+div.commentbox_main:hover,
+textarea#tbCommentBody:hover,
+textarea#tbCommentBody:focus { border-color: #000 !important; outline: none !important; }
+div.commentbox_main::before,
+div.commentbox_main::after { display: none !important; }
+
+/* 评论框标签页 */
+.commentbox_title a, .commentbox_title_left a,
+.commentbox_title_left .tab_selected, .commentbox_title_left span {
+    font-family:           var(--serif) !important;
+    color:                 #000 !important;
+    text-decoration-color: #000 !important;
+    border-bottom-color:   #000 !important;
+    font-weight:           500 !important;
+}
+.commentbox_title_left .tab_selected {
+    border:           1px solid #000 !important;
+    background-color: var(--bg) !important;
+    border-bottom:    none !important;
+}
+.commentbox_title a:hover {
+    color:                 #666 !important;
+    text-decoration-color: #666 !important;
+    border-bottom-color:   #666 !important;
+}
 .commentbox_title_left { border-bottom: 1px solid #000 !important; }
 
-/* 修复评论框底部选项对齐 */
-#commentbox_opt { display: flex !important; align-items: center !important; gap: 15px !important; font-family: var(--font-serif) !important; color: #000 !important; font-size: 13px !important; margin-top: 10px !important; }
-/* 修复“退出”等底部选项链接的颜色 */
-#commentbox_opt a { 
-    color: #555 !important; /* 明确指定为深灰色，防止变成白色 */
-    text-decoration: none !important; 
-    transition: color 0.3s ease !important; 
+/* 评论框底部选项行 */
+#commentbox_opt {
+    display:     flex !important;
+    align-items: center !important;
+    gap:         15px !important;
+    font-family: var(--serif) !important;
+    font-size:   13px !important;
+    color:       #000 !important;
+    margin-top:  10px !important;
 }
-#commentbox_opt a:hover { 
-    color: #000 !important; /* 鼠标悬浮时变纯黑 */
-}
-.inline_middle { font-family: var(--font-serif) !important; }
+#commentbox_opt a { color: #555 !important; text-decoration: none !important; transition: color 0.3s ease !important; }
+#commentbox_opt a:hover { color: #000 !important; }
+.inline_middle { font-family: var(--serif) !important; }
 
-/* 修复提交按钮被截断问题 */
+/* 提交按钮 */
 #btn_comment_submit {
-    width: auto !important;
-    height: auto !important;
-    line-height: normal !important;
+    width:            auto !important;
+    height:           auto !important;
+    line-height:      normal !important;
     background-color: #000 !important;
-    color: #fff !important;
-    border: 1px solid #000 !important;
-    padding: 8px 24px !important;
-    border-radius: 4px !important;
-    font-family: var(--font-serif) !important;
-    font-size: 14px !important;
-    cursor: pointer !important;
-    transition: all 0.3s ease !important;
+    color:            #fff !important;
+    border:           1px solid #000 !important;
+    padding:          8px 24px !important;
+    border-radius:    4px !important;
+    font-family:      var(--serif) !important;
+    font-size:        14px !important;
+    cursor:           pointer !important;
+    transition:       all 0.3s ease !important;
 }
-#btn_comment_submit:hover { background-color: #333 !important; border-color: #333 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; }
+#btn_comment_submit:hover {
+    background-color: #333 !important;
+    border-color:     #333 !important;
+    box-shadow:       0 2px 8px rgba(0,0,0,.2) !important;
+}
 
-/* =====================================================
-   § 10. 随笔 Digg
-   ===================================================== */
+
+/* §10 ── Digg 支持/反对
+   ─ 原始 #div_digg 区块隐藏；按钮由 JS 内联至 postDesc（见页脚 §5-D）
+   ============================================================================= */
 #div_digg { display: none !important; }
 
-/* =====================================================
-   § 11. 浮动目录面板 (TOC)
-   ===================================================== */
+
+/* §11 ── 浮动目录 TOC
+   ─ 仅宽屏（>1300px）显示，由 JS 动态创建（见页脚 §6-A）
+   ============================================================================= */
 #pixyll-toc-panel {
-    position: fixed !important; /* 默认 fixed，JS 会在触底时改为 absolute */
-    top: 120px !important;
-    right: 24px !important;
-    width: 200px !important;
-    max-height: calc(100vh - 160px) !important;
-    overflow-y: auto !important;
-    z-index: 9999 !important;
-    background: #ffffff !important;
-    border-left: 2px solid #f0f0f0 !important;
-    padding: 0 0 16px 16px !important;
-    box-sizing: border-box !important;
+    position:    fixed !important;
+    top:         120px !important;
+    right:       24px !important;
+    width:       200px !important;
+    max-height:  calc(100vh - 160px) !important;
+    overflow-y:  auto !important;
+    z-index:     9999 !important;
+    background:  var(--bg) !important;
+    border-left: 2px solid var(--border) !important;
+    padding:     0 0 16px 16px !important;
+    box-sizing:  border-box !important;
 }
-#pixyll-toc-panel .toc-heading { font-family: var(--font-serif) !important; font-size: 11px !important; font-weight: 700 !important; letter-spacing: 2.5px !important; text-transform: uppercase !important; color: #bbbbbb !important; margin: 0 0 14px 0 !important; padding: 0 !important; border: none !important; }
-#pixyll-toc-panel a { display: block !important; font-family: var(--font-serif) !important; font-size: 13px !important; line-height: 1.45 !important; color: #aaaaaa !important; text-decoration: none !important; margin-bottom: 10px !important; border-left: 2px solid transparent !important; padding-left: 10px !important; margin-left: -18px !important; transition: color 0.2s ease, border-color 0.2s ease !important; word-break: break-all !important; }
-#pixyll-toc-panel a:hover { color: #444444 !important; border-color: #cccccc !important; }
-#pixyll-toc-panel a.toc-h3 { font-size: 12px !important; padding-left: 22px !important; color: #cccccc !important; }
-#pixyll-toc-panel a.toc-h3:hover { color: #888888 !important; border-color: #cccccc !important; }
-#pixyll-toc-panel a.toc-active { color: #111111 !important; font-weight: 700 !important; border-color: #111111 !important; }
+
+/* "Contents" 标题 */
+#pixyll-toc-panel .toc-heading {
+    font-family:    var(--serif) !important;
+    font-size:      11px !important;
+    font-weight:    700 !important;
+    letter-spacing: 2.5px !important;
+    text-transform: uppercase !important;
+    color:          #bbb !important;
+    margin:         0 0 14px !important;
+    padding:        0 !important;
+    border:         none !important;
+}
+
+/* h2 级目录项 */
+#pixyll-toc-panel a {
+    display:         block !important;
+    font-family:     var(--serif) !important;
+    font-size:       13px !important;
+    line-height:     1.45 !important;
+    color:           #aaa !important;
+    text-decoration: none !important;
+    margin-bottom:   10px !important;
+    border-left:     2px solid transparent !important;
+    padding-left:    10px !important;
+    margin-left:     -18px !important;
+    transition:      color 0.2s ease, border-color 0.2s ease !important;
+    word-break:      break-all !important;
+}
+#pixyll-toc-panel a:hover { color: #444 !important; border-color: #ccc !important; }
+
+/* h3 级目录项（额外缩进） */
+#pixyll-toc-panel a.toc-h3 { font-size: 12px !important; padding-left: 22px !important; color: #ccc !important; }
+#pixyll-toc-panel a.toc-h3:hover { color: #888 !important; border-color: #ccc !important; }
+
+/* 当前阅读章节高亮 */
+#pixyll-toc-panel a.toc-active { color: #111 !important; font-weight: 700 !important; border-color: #111 !important; }
+
+/* 窄屏隐藏 */
 @media screen and (max-width: 1300px) { #pixyll-toc-panel { display: none !important; } }
 
-/* =====================================================
-   § 12. 页面切换淡入淡出
-   ===================================================== */
+
+/* §12 ── 页面过渡动画
+   ─ html 初始透明度 0；JS 在 DOMContentLoaded 后设为 1 实现淡入（见页脚 §4）
+   ============================================================================= */
 html { opacity: 0; transition: opacity 0.22s ease; }
 
-/* =====================================================
-   § 13. 导航栏
-   ===================================================== */
+
+/* §13 ── 导航栏
+   ─ 隐藏博客园默认顶部导航，改用 JS 注入的自定义二级导航（见 §14）
+   ============================================================================= */
 #navigator { display: none !important; }
 
-/* =====================================================
-   § 14. 文章页二级导航栏 + 主页分割线 (修复手机端单行显示)
-   ===================================================== */
+
+/* §14 ── 二级导航 & 分割线
+   ─ 由 JS 动态创建并插入 #header 之后（见页脚 §5-C）
+   ─ overflow-x + white-space 保证手机端单行横向滚动
+   ============================================================================= */
 #pixyll-subnav {
-    width: 100% !important;
-    max-width: var(--max-width) !important;
-    margin: 0 auto !important;
-    padding: 0 20px 40px !important;
-    box-sizing: border-box !important;
-    text-align: left !important;
-    
-    /* 开启 Flex 横向滚动，保持单行 */
-    display: flex !important;
+    width:       100% !important;
+    max-width:   var(--max-w) !important;
+    margin:      0 auto !important;
+    padding:     0 20px 40px !important;
+    box-sizing:  border-box !important;
+    display:     flex !important;
     align-items: center !important;
-    overflow-x: auto !important;
+    overflow-x:  auto !important;
     white-space: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
-    scrollbar-width: none !important; /* Firefox 隐藏滚动条 */
+    scrollbar-width: none !important;
 }
-#pixyll-subnav::-webkit-scrollbar { display: none !important; } /* Chrome/Safari 隐藏滚动条 */
+#pixyll-subnav::-webkit-scrollbar { display: none !important; }
 
+/* 导航项 */
 #pixyll-subnav a, #pixyll-subnav .subnav-date {
-    flex-shrink: 0 !important; /* 防止在手机端被挤压换行 */
-    font-family: var(--font-serif) !important;
-    font-size: 12px !important;
-    font-weight: 400 !important;
-    letter-spacing: 1px !important;
-    color: #bbb !important;
+    flex-shrink:     0 !important;
+    font-family:     var(--serif) !important;
+    font-size:       12px !important;
+    font-weight:     400 !important;
+    letter-spacing:  1px !important;
+    color:           var(--muted) !important;
     text-decoration: none !important;
-    margin-right: 20px !important;
+    margin-right:    20px !important;
 }
-#pixyll-subnav a { border-bottom: 1px solid transparent !important; transition: color 0.25s ease, border-bottom-color 0.25s ease !important; }
+#pixyll-subnav a {
+    border-bottom: 1px solid transparent !important;
+    transition:    color 0.25s ease, border-bottom-color 0.25s ease !important;
+}
 #pixyll-subnav a:hover { color: #111 !important; border-bottom-color: #111 !important; }
 
-#pixyll-home-divider { width: 100% !important; max-width: var(--max-width) !important; margin: 0 auto 40px !important; padding: 0 20px !important; box-sizing: border-box !important; border: none !important; border-top: 1px solid #f0f0f0 !important; }
+/* 主页分割线 */
+#pixyll-home-divider {
+    width:      100% !important;
+    max-width:  var(--max-w) !important;
+    margin:     0 auto 40px !important;
+    padding:    0 20px !important;
+    box-sizing: border-box !important;
+    border:     none !important;
+    border-top: 1px solid var(--border) !important;
+}
 
-/* =====================================================
-   § 15. 页脚 (Footer) 美化
-   ===================================================== */
+
+/* §15 ── 页脚
+   ============================================================================= */
 #footer {
-    font-family: var(--font-serif) !important;
-    font-size: 12px !important;
-    color: #999 !important;
-    text-align: center !important;
-    margin: 60px auto 20px !important;
-    padding: 20px 10px !important;
-    border-top: 1px solid #f0f0f0 !important;
-    max-width: var(--max-width) !important;
+    font-family: var(--serif) !important;
+    font-size:   12px !important;
+    color:       var(--faint) !important;
+    text-align:  center !important;
+    margin:      60px auto 20px !important;
+    padding:     20px 10px !important;
+    border-top:  1px solid var(--border) !important;
+    max-width:   var(--max-w) !important;
     line-height: 1.8 !important;
 }
-#footer a { color: #999 !important; text-decoration: none !important; border-bottom: 1px solid transparent !important; transition: all 0.2s !important; }
+#footer a {
+    color:           var(--faint) !important;
+    text-decoration: none !important;
+    border-bottom:   1px solid transparent !important;
+    transition:      all 0.2s !important;
+}
 #footer a:hover { color: #333 !important; border-bottom-color: #333 !important; }
 #footer img { display: none !important; } /* 隐藏公安备案图标 */
 
-/* =====================================================
-   § 16. 深色模式适配
-   ===================================================== */
 
-/* ── 系统深色（未强制浅色时生效）── */
-@media (prefers-color-scheme: dark) {
-    html:not([data-theme="light"]) {
-        --bg-color: #1a1a1a; --text-main: #d4d4d4; --text-title: #f0f0f0;
-        --code-bg: #2d2d2d; --accent-color: #f06292; color-scheme: dark;
-    }
-    html:not([data-theme="light"]) body { background-color: var(--bg-color) !important; }
-    html:not([data-theme="light"]) #mainContent .postTitle,
-    html:not([data-theme="light"]) #mainContent .day + .day > .postTitle:first-child,
-    html:not([data-theme="light"]) .postTitle,
-    html:not([data-theme="light"]) #pixyll-home-divider,
-    html:not([data-theme="light"]) #footer { border-color: #2e2e2e !important; }
-    html:not([data-theme="light"]) .postTitle2 { color: var(--text-title) !important; }
-    html:not([data-theme="light"]) .postTitle2:hover { color: #888 !important; }
-    html:not([data-theme="light"]) .postCon,
-    html:not([data-theme="light"]) .c_b_p_desc { color: #666 !important; }
-    html:not([data-theme="light"]) .postDesc,
-    html:not([data-theme="light"]) .postDesc a { color: #666 !important; }
-    html:not([data-theme="light"]) .postDesc a:hover { color: #bbb !important; border-bottom-color: #bbb !important; }
-    html:not([data-theme="light"]) div.commentbox_main,
-    html:not([data-theme="light"]) textarea#tbCommentBody { background-color: #222 !important; border-color: #333 !important; color: var(--text-main) !important; }
-    html:not([data-theme="light"]) div.commentbox_main:hover,
-    html:not([data-theme="light"]) textarea#tbCommentBody:hover,
-    html:not([data-theme="light"]) textarea#tbCommentBody:focus { border-color: #aaa !important; }
-    html:not([data-theme="light"]) .commentbox_title_left { border-bottom-color: #555 !important; }
-    html:not([data-theme="light"]) .commentbox_title a,
-    html:not([data-theme="light"]) .commentbox_title_left a,
-    html:not([data-theme="light"]) .commentbox_title_left span { color: var(--text-title) !important; }
-    html:not([data-theme="light"]) .commentbox_title_left .tab_selected { border-color: #555 !important; background-color: #1a1a1a !important; }
-    html:not([data-theme="light"]) .blog_comment_body a { color: #ccc !important; }
-    html:not([data-theme="light"]) .blog_comment_body a:hover { color: #888 !important; }
-    html:not([data-theme="light"]) .feedbackItem .comment_author,
-    html:not([data-theme="light"]) .feedbackItem .comment_author a,
-    html:not([data-theme="light"]) .feedbackItem .louzhu { color: #e0e0e0 !important; }
-    html:not([data-theme="light"]) .feedbackListSubtitle,
-    html:not([data-theme="light"]) .feedbackListSubtitle a,
-    html:not([data-theme="light"]) .comment_actions a { color: #888 !important; }
-    html:not([data-theme="light"]) #comment_sort .active,
-    html:not([data-theme="light"]) #comment_sort span.selected { color: #e0e0e0 !important; border-bottom-color: #e0e0e0 !important; }
-    html:not([data-theme="light"]) #commentbox_opt { color: #aaa !important; }
-    html:not([data-theme="light"]) #commentbox_opt a { color: #888 !important; }
-    html:not([data-theme="light"]) #commentbox_opt a:hover { color: #ddd !important; }
-    html:not([data-theme="light"]) #btn_comment_submit { background-color: #333 !important; border-color: #555 !important; }
-    html:not([data-theme="light"]) #btn_comment_submit:hover { background-color: #555 !important; }
-    html:not([data-theme="light"]) .pager a { border-color: #333 !important; color: #aaa !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel { background: #1a1a1a !important; border-left-color: #2e2e2e !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel a { color: #555 !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel a:hover { color: #aaa !important; border-color: #555 !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-h3 { color: #444 !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-h3:hover { color: #888 !important; }
-    html:not([data-theme="light"]) #pixyll-toc-panel a.toc-active { color: #f0f0f0 !important; border-color: #f0f0f0 !important; }
-    html:not([data-theme="light"]) #pixyll-subnav a,
-    html:not([data-theme="light"]) #pixyll-subnav .subnav-date { color: #555 !important; }
-    html:not([data-theme="light"]) #pixyll-subnav a:hover { color: #ddd !important; border-bottom-color: #ddd !important; }
-    html:not([data-theme="light"]) #footer { color: #555 !important; }
-    html:not([data-theme="light"]) #footer a { color: #555 !important; }
-    html:not([data-theme="light"]) #footer a:hover { color: #aaa !important; border-bottom-color: #aaa !important; }
-    html:not([data-theme="light"]) #mainContent .postBody h1,
-    html:not([data-theme="light"]) #mainContent .postBody h2,
-    html:not([data-theme="light"]) #mainContent .postBody h3,
-    html:not([data-theme="light"]) #mainContent .postBody h4,
-    html:not([data-theme="light"]) #mainContent .postBody h5,
-    html:not([data-theme="light"]) #mainContent .postBody h6 { color: var(--text-title) !important; }
-    html:not([data-theme="light"]) #mainContent .postBody a,
-    html:not([data-theme="light"]) #blog_post_info_block a { color: #aaaaaa !important; }
-    html:not([data-theme="light"]) #mainContent .postBody a:hover,
-    html:not([data-theme="light"]) #blog_post_info_block a:hover { color: #dddddd !important; }
+/* §16 ── 深色模式补充规则
+   ─ §1 中的变量覆盖已处理大多数元素
+   ─ 此处仅补充「硬编码颜色」无法通过变量自动适应的场景
+   ============================================================================= */
+
+/* 评论输入框（硬编码了 #ddd / #fff，需单独处理） */
+html.px-dark div.commentbox_main,
+html.px-dark textarea#tbCommentBody {
+    background-color: #222 !important;
+    border-color:     #333 !important;
+    color:            var(--text) !important;
 }
+html.px-dark div.commentbox_main:hover,
+html.px-dark textarea#tbCommentBody:hover,
+html.px-dark textarea#tbCommentBody:focus { border-color: #aaa !important; }
 
-/* ── 强制深色（与上方规则完全镜像，通过 data-theme="dark" 触发）── */
-html[data-theme="dark"] {
-    --bg-color: #1a1a1a; --text-main: #d4d4d4; --text-title: #f0f0f0;
-    --code-bg: #2d2d2d; --accent-color: #f06292; color-scheme: dark;
-}
-html[data-theme="dark"] body { background-color: var(--bg-color) !important; }
-html[data-theme="dark"] #mainContent .postTitle,
-html[data-theme="dark"] #mainContent .day + .day > .postTitle:first-child,
-html[data-theme="dark"] .postTitle,
-html[data-theme="dark"] #pixyll-home-divider,
-html[data-theme="dark"] #footer { border-color: #2e2e2e !important; }
-html[data-theme="dark"] .postTitle2 { color: var(--text-title) !important; }
-html[data-theme="dark"] .postTitle2:hover { color: #888 !important; }
-html[data-theme="dark"] .postCon,
-html[data-theme="dark"] .c_b_p_desc { color: #666 !important; }
-html[data-theme="dark"] .postDesc,
-html[data-theme="dark"] .postDesc a { color: #666 !important; }
-html[data-theme="dark"] .postDesc a:hover { color: #bbb !important; border-bottom-color: #bbb !important; }
-html[data-theme="dark"] div.commentbox_main,
-html[data-theme="dark"] textarea#tbCommentBody { background-color: #222 !important; border-color: #333 !important; color: var(--text-main) !important; }
-html[data-theme="dark"] div.commentbox_main:hover,
-html[data-theme="dark"] textarea#tbCommentBody:hover,
-html[data-theme="dark"] textarea#tbCommentBody:focus { border-color: #aaa !important; }
-html[data-theme="dark"] .commentbox_title_left { border-bottom-color: #555 !important; }
-html[data-theme="dark"] .commentbox_title a,
-html[data-theme="dark"] .commentbox_title_left a,
-html[data-theme="dark"] .commentbox_title_left span { color: var(--text-title) !important; }
-html[data-theme="dark"] .commentbox_title_left .tab_selected { border-color: #555 !important; background-color: #1a1a1a !important; }
-html[data-theme="dark"] .blog_comment_body a { color: #ccc !important; }
-html[data-theme="dark"] .blog_comment_body a:hover { color: #888 !important; }
-html[data-theme="dark"] .feedbackItem .comment_author,
-html[data-theme="dark"] .feedbackItem .comment_author a,
-html[data-theme="dark"] .feedbackItem .louzhu { color: #e0e0e0 !important; }
-html[data-theme="dark"] .feedbackListSubtitle,
-html[data-theme="dark"] .feedbackListSubtitle a,
-html[data-theme="dark"] .comment_actions a { color: #888 !important; }
-html[data-theme="dark"] #comment_sort .active,
-html[data-theme="dark"] #comment_sort span.selected { color: #e0e0e0 !important; border-bottom-color: #e0e0e0 !important; }
-html[data-theme="dark"] #commentbox_opt { color: #aaa !important; }
-html[data-theme="dark"] #commentbox_opt a { color: #888 !important; }
-html[data-theme="dark"] #commentbox_opt a:hover { color: #ddd !important; }
-html[data-theme="dark"] #btn_comment_submit { background-color: #333 !important; border-color: #555 !important; }
-html[data-theme="dark"] #btn_comment_submit:hover { background-color: #555 !important; }
-html[data-theme="dark"] .pager a { border-color: #333 !important; color: #aaa !important; }
-html[data-theme="dark"] #pixyll-toc-panel { background: #1a1a1a !important; border-left-color: #2e2e2e !important; }
-html[data-theme="dark"] #pixyll-toc-panel a { color: #555 !important; }
-html[data-theme="dark"] #pixyll-toc-panel a:hover { color: #aaa !important; border-color: #555 !important; }
-html[data-theme="dark"] #pixyll-toc-panel a.toc-h3 { color: #444 !important; }
-html[data-theme="dark"] #pixyll-toc-panel a.toc-h3:hover { color: #888 !important; }
-html[data-theme="dark"] #pixyll-toc-panel a.toc-active { color: #f0f0f0 !important; border-color: #f0f0f0 !important; }
-html[data-theme="dark"] #pixyll-subnav a,
-html[data-theme="dark"] #pixyll-subnav .subnav-date { color: #555 !important; }
-html[data-theme="dark"] #pixyll-subnav a:hover { color: #ddd !important; border-bottom-color: #ddd !important; }
-html[data-theme="dark"] #footer { color: #555 !important; }
-html[data-theme="dark"] #footer a { color: #555 !important; }
-html[data-theme="dark"] #footer a:hover { color: #aaa !important; border-bottom-color: #aaa !important; }
-html[data-theme="dark"] #mainContent .postBody h1,
-html[data-theme="dark"] #mainContent .postBody h2,
-html[data-theme="dark"] #mainContent .postBody h3,
-html[data-theme="dark"] #mainContent .postBody h4,
-html[data-theme="dark"] #mainContent .postBody h5,
-html[data-theme="dark"] #mainContent .postBody h6 { color: var(--text-title) !important; }
-html[data-theme="dark"] #mainContent .postBody a,
-html[data-theme="dark"] #blog_post_info_block a { color: #aaaaaa !important; }
-html[data-theme="dark"] #mainContent .postBody a:hover,
-html[data-theme="dark"] #blog_post_info_block a:hover { color: #dddddd !important; }
+/* 评论框标签页 */
+html.px-dark .commentbox_title_left { border-bottom-color: #555 !important; }
+html.px-dark .commentbox_title a,
+html.px-dark .commentbox_title_left a,
+html.px-dark .commentbox_title_left span { color: var(--title) !important; }
+html.px-dark .commentbox_title_left .tab_selected { border-color: #555 !important; }
 
-/* =====================================================
-   § 17. 主题切换按钮
-   ===================================================== */
+/* 评论内容 */
+html.px-dark .blog_comment_body a { color: #ccc !important; }
+html.px-dark .blog_comment_body a:hover { color: #888 !important; }
+html.px-dark .feedbackItem .comment_author,
+html.px-dark .feedbackItem .comment_author a,
+html.px-dark .feedbackItem .louzhu { color: #e0e0e0 !important; }
+html.px-dark .feedbackListSubtitle, html.px-dark .feedbackListSubtitle a,
+html.px-dark .comment_actions a { color: #888 !important; }
+html.px-dark #comment_sort .active,
+html.px-dark #comment_sort span.selected { color: #e0e0e0 !important; border-bottom-color: #e0e0e0 !important; }
+
+/* 评论框底部 */
+html.px-dark #commentbox_opt { color: #aaa !important; }
+html.px-dark #commentbox_opt a { color: #888 !important; }
+html.px-dark #commentbox_opt a:hover { color: #ddd !important; }
+html.px-dark #btn_comment_submit { background-color: #333 !important; border-color: #555 !important; }
+html.px-dark #btn_comment_submit:hover { background-color: #555 !important; }
+
+/* 翻页、正文链接 */
+html.px-dark .pager a { border-color: #333 !important; color: #aaa !important; }
+html.px-dark #mainContent .postBody a,
+html.px-dark #blog_post_info_block a { color: #aaa !important; }
+html.px-dark #mainContent .postBody a:hover,
+html.px-dark #blog_post_info_block a:hover { color: #ddd !important; }
+
+/* TOC 链接 */
+html.px-dark #pixyll-toc-panel a { color: #555 !important; }
+html.px-dark #pixyll-toc-panel a:hover { color: #aaa !important; border-color: #555 !important; }
+html.px-dark #pixyll-toc-panel a.toc-h3 { color: #444 !important; }
+html.px-dark #pixyll-toc-panel a.toc-h3:hover { color: #888 !important; }
+html.px-dark #pixyll-toc-panel a.toc-active { color: var(--title) !important; border-color: var(--title) !important; }
+
+/* 文章摘要 */
+html.px-dark .postCon, html.px-dark .c_b_p_desc { color: #666 !important; }
+
+/* Lightbox 遮罩加深 */
+html.px-dark #pixyll-lightbox { background: rgba(0,0,0,.4) !important; }
+
+
+/* §17 ── 主题切换按钮
+   ─ 由 JS 动态追加到 footer（见页脚 §5-E）
+   ============================================================================= */
 .pixyll-theme-btn {
-    font-family: var(--font-serif) !important;
-    font-size: 12px !important;
+    font-family:    var(--serif) !important;
+    font-size:      12px !important;
     letter-spacing: 1px !important;
-    color: #bbb !important;
-    text-decoration: none !important;
-    border: none !important;
-    border-bottom: 1px solid transparent !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    transition: color 0.2s ease, border-bottom-color 0.2s ease !important;
-    cursor: pointer !important;
-    touch-action: manipulation !important;
+    color:          var(--muted) !important;
+    background:     transparent !important;
+    border:         none !important;
+    border-bottom:  1px solid transparent !important;
+    padding:        0 !important;
+    margin:         0 !important;
+    cursor:         pointer !important;
+    transition:     color 0.2s ease, border-bottom-color 0.2s ease !important;
+    touch-action:   manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
-    user-select: none !important;
+    user-select:    none !important;
     -webkit-appearance: none !important;
-    appearance: none !important;
-    outline: none !important;
+    appearance:     none !important;
+    outline:        none !important;
 }
 .pixyll-theme-btn:hover { color: #555 !important; border-bottom-color: #555 !important; }
 .pixyll-theme-btn[data-active="true"] { color: #333 !important; border-bottom-color: #333 !important; font-weight: 600 !important; }
+html.px-dark .pixyll-theme-btn:hover,
+html.px-dark .pixyll-theme-btn[data-active="true"] { color: #ddd !important; border-bottom-color: #ddd !important; }
 
-@media (prefers-color-scheme: dark) {
-    html:not([data-theme="light"]) .pixyll-theme-btn:hover,
-    html:not([data-theme="light"]) .pixyll-theme-btn[data-active="true"] { color: #ddd !important; border-bottom-color: #ddd !important; }
+
+/* §18 ── 图片查看器 Lightbox
+   ─ 正文图片 70% 宽居中，鼠标变放大镜；点击后亚克力模糊背景全屏预览
+   ─ --lb-blur 控制背景模糊强度（4px 轻 ~ 20px 强）
+   ─ JS 事件绑定见页脚 §7
+   ============================================================================= */
+
+/* 正文图片 */
+#cnblogs_post_body img {
+    width:         70% !important;
+    display:       block !important;
+    margin:        1.5em auto !important;
+    cursor:        zoom-in !important;
+    border-radius: 2px !important;
+    transition:    opacity 0.2s ease !important;
 }
-html[data-theme="dark"] .pixyll-theme-btn:hover,
-html[data-theme="dark"] .pixyll-theme-btn[data-active="true"] { color: #ddd !important; border-bottom-color: #ddd !important; }
+#cnblogs_post_body img:hover { opacity: 0.85 !important; }
+
+/* 遮罩层（亚克力效果：backdrop-filter 模糊 + 半透明叠加） */
+#pixyll-lightbox {
+    position:   fixed !important;
+    inset:      0 !important;
+    backdrop-filter:         blur(var(--lb-blur)) saturate(1.6) !important;
+    -webkit-backdrop-filter: blur(var(--lb-blur)) saturate(1.6) !important;
+    background: rgba(255,255,255,.25) !important;
+    z-index:    999999 !important;
+    display:    none;           /* JS 控制，不加 !important */
+    align-items:     center !important;
+    justify-content: center !important;
+    opacity:    0;
+    transition: opacity 0.25s ease !important;
+    cursor:     zoom-out !important;
+}
+#pixyll-lightbox.lb-open    { display: flex !important; }
+#pixyll-lightbox.lb-visible { opacity: 1 !important; }
+
+/* 预览图：pointer-events:none 使点击穿透到遮罩触发关闭 */
+#pixyll-lightbox img {
+    max-width:      82vw !important;
+    max-height:     82vh !important;
+    width:          auto !important;
+    height:         auto !important;
+    object-fit:     contain !important;
+    display:        block !important;
+    margin:         0 !important;
+    border-radius:  4px !important;
+    cursor:         default !important;
+    box-shadow:     0 8px 48px rgba(0,0,0,.2) !important;
+    transition:     transform 0.25s ease !important;
+    pointer-events: none !important;
+}
