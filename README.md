@@ -1,7 +1,7 @@
 # Cnblog_Pixyll_Skin
 博客园中基于SimpleMemory皮肤的仿Pixyll主题皮肤
 
-> ~~ 注：最新分支见latest ~~
+> -- 注：最新分支见latest --
 
 # Pixyll皮肤更换教程
 
