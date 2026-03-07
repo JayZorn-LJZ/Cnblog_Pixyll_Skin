@@ -1,369 +1,625 @@
-<!-- =====================================================
-     页脚 HTML / JavaScript
-     Theme : Pixyll Minimalist  |  Author: JayZorn
-     ===================================================== -->
+<!-- =============================================================================
+   页脚 HTML / JavaScript — Pixyll Minimalist Theme  |  Author: JayZorn
+   ─────────────────────────────────────────────────────────────────────────────
+   执行顺序（从快到慢）
 
-<!-- § 1. 隐藏 [Ctrl+Enter] 提示 -->
+   [同步，阻塞渲染——必须最先执行]
+   §1  主题初始化 —— 防 FOUC，读取偏好、写入 .px-dark 和背景色
+   §2  自定义 Favicon —— 防默认图标闪烁
+
+   [位于 footer，DOM 已解析，同步加载无阻塞问题]
+   §3  Lenis 平滑滚动 —— CDN 加载库 + 立即初始化；暴露 window.pixyllLenis
+       供 Lightbox（§7）调用 stop() / start() 暂停/恢复滚动
+
+   [不阻塞渲染]
+   §4  页面过渡淡入淡出 —— DOMContentLoaded 后淡入；同域链接跳转前淡出
+
+   [DOMContentLoaded——所有 DOM 依赖操作]
+   §5  DOM 主逻辑（所有页面共享）
+       5-A  隐藏 [Ctrl+Enter] 提示
+       5-B  隐藏 .blogStats
+       5-C  注入二级导航（文章页）or 主页分割线
+       5-D  统一 MutationObserver：等待文章页异步渲染的 4 个元素
+            · postDesc 移至 EntryTag 上方
+            · 移除 postDesc 中的作者链接
+            · post-date 右侧插入 CC 许可证
+            · 构建 Digg 支持/反对内联按钮
+       5-E  ⚠ 所有页面均执行：主题切换按钮插入 footer
+
+   [requestIdleCallback——浏览器空闲时执行，不阻塞关键帧]
+   §6  文章页非首屏功能
+       6-A  浮动目录 TOC
+       6-B  订阅此文 RSS 弹窗
+   §7  图片查看器 Lightbox（仅文章页）
+       · 开启时调用 window.pixyllLenis.stop() 暂停滚动
+       · 关闭时调用 window.pixyllLenis.start() 恢复滚动
+   ============================================================================= -->
+
+
+<!-- §1 ── 主题初始化（同步执行，必须最先运行）
+     ─ 读取 localStorage → 决定是否给 <html> 加 .px-dark
+     ─ 背景色同步写入 inline style，绕过博客园对 body background 的覆盖
+     ─ 暴露 window.pixyllSetTheme(theme) 供切换按钮（§5-E）调用
+     ─ theme 取值：'system'（默认）| 'light' | 'dark'
+  ============================================================================= -->
 <script>
-function hideStubbornElements() {
-    $("p, span").each(function () {
-        if ($(this).text().indexOf("Ctrl+Enter") >= 0) $(this).hide();
+(function () {
+    var KEY  = 'pixyll-theme';
+    var root = document.documentElement;
+
+    /* 读取偏好，计算是否深色 */
+    var saved; try { saved = localStorage.getItem(KEY) || 'system'; } catch (e) { saved = 'system'; }
+    var isDark = saved === 'dark' || (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    /* 立即写入 class + 背景色，防止背景闪白/闪黑 */
+    if (isDark) root.classList.add('px-dark');
+    root.style.setProperty('background-color', isDark ? '#1a1a1a' : '#ffffff', 'important');
+
+    /* 全局主题切换函数，供切换按钮调用 */
+    window.pixyllSetTheme = function (theme) {
+        try { localStorage.setItem(KEY, theme); } catch (e) {}
+        var sys  = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = theme === 'dark' || (theme === 'system' && sys);
+        var bg   = dark ? '#1a1a1a' : '#ffffff';
+
+        root.classList.toggle('px-dark', dark);
+        root.style.setProperty('background-color', bg, 'important');
+        if (document.body) document.body.style.setProperty('background-color', bg, 'important');
+
+        /* 同步切换按钮激活态 */
+        document.querySelectorAll('.pixyll-theme-btn').forEach(function (btn) {
+            btn.setAttribute('data-active', btn.getAttribute('data-t') === theme ? 'true' : 'false');
+        });
+    };
+
+    /* 监听系统偏好变化（仅 system 模式响应） */
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+        var cur; try { cur = localStorage.getItem(KEY) || 'system'; } catch (e) { cur = 'system'; }
+        if (cur === 'system') window.pixyllSetTheme('system');
     });
-}
-$(document).ajaxComplete(hideStubbornElements);
-var _cleanCount = 0;
-var _cleanTimer = setInterval(function () {
-    hideStubbornElements();
-    if (++_cleanCount >= 10) clearInterval(_cleanTimer);
-}, 500);
+})();
 </script>
 
-<!-- § 2. 自定义标签页图标（favicon） -->
+
+<!-- §2 ── 自定义 Favicon（同步执行）
+  ============================================================================= -->
 <script>
 (function () {
     var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/x-icon';
-    link.rel  = 'shortcut icon';
-    link.href = 'https://blog-static.cnblogs.com/files/blogs/827007/output.ico?t=1771785298&download=true';
-    document.getElementsByTagName('head')[0].appendChild(link);
+    link.type = 'image/png';
+    link.rel  = 'icon';
+    link.href = 'https://images.cnblogs.com/cnblogs_com/blogs/827007/galleries/2495326/o_260224040327_favicon-rounded.png';
+    document.head.appendChild(link);
 })();
 </script>
 
-<!-- § 3. 正文右侧浮动目录面板 (TOC) - 修复滚动越界问题 -->
-<script>
-$(function () {
-    if (!/\/p\/\d+/.test(window.location.href)) return;
 
-    var postBody = document.getElementById('cnblogs_post_body') || document.getElementById('post_detail') || document.getElementById('mainContent');
-    if (!postBody) return;
-
-    var headings = Array.prototype.slice.call(postBody.querySelectorAll('h2, h3')).filter(function (h) { return h.textContent.trim().length > 0; });
-    if (headings.length < 1) return;
-
-    headings.forEach(function (h, i) { if (!h.id) h.id = 'toc-h-' + i; });
-
-    var panel = document.createElement('div');
-    panel.id  = 'pixyll-toc-panel';
-
-    var title = document.createElement('p');
-    title.className = 'toc-heading';
-    title.textContent = 'Contents';
-    panel.appendChild(title);
-
-    var links = [];
-    headings.forEach(function (h) {
-        var a = document.createElement('a');
-        a.href = '#' + h.id;
-        a.textContent = h.textContent.trim();
-        a.className = (h.tagName === 'H3') ? 'toc-h3' : '';
-        a.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.scrollTo({ top: h.getBoundingClientRect().top + window.pageYOffset - 24, behavior: 'smooth' });
-        });
-        panel.appendChild(a);
-        links.push({ el: a, heading: h });
-    });
-
-    document.body.appendChild(panel);
-    // 点击图片隐藏 TOC，再次点击任意处恢复
-    var tocHiddenForImage = false;
-    document.addEventListener('click', function (e) {
-        if (tocHiddenForImage) {
-            // 无论点哪里，第二次点击一律恢复
-            tocHiddenForImage = false;
-            panel.style.removeProperty('display');
-        } else if (e.target.closest && e.target.closest('img')) {
-            tocHiddenForImage = true;
-            panel.style.setProperty('display', 'none', 'important');
-        }
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && tocHiddenForImage) {
-            tocHiddenForImage = false;
-            panel.style.removeProperty('display');
-        }
-    });
-
-    var rafPending = false;
-    function updateActive() {
-        rafPending = false;
-        var scrollTop = window.pageYOffset;
-
-        // 1. 高亮当前阅读的标题
-        var cur = null;
-        headings.forEach(function (h) { if (h.offsetTop <= scrollTop + 80) cur = h; });
-        links.forEach(function (item) { item.el.classList.toggle('toc-active', item.heading === cur); });
-
-        // 2. 限制 TOC 面板不要滚动到 blog_post_info_block
-        var infoBlock = document.getElementById('blog_post_info_block');
-
-        // 获取边界：如果存在 infoBlock，则以它的顶部减去 40px 的间距作为边界；否则退化为正文底部
-        var boundaryBottom = infoBlock 
-            ? (infoBlock.getBoundingClientRect().top + window.pageYOffset - 40) 
-            : (postBody.getBoundingClientRect().bottom + window.pageYOffset);
-
-        var panelHeight = panel.offsetHeight;
-
-        // 如果当前滚动位置 + 120(默认top) + 面板高度 超出了边界，则切换为绝对定位停在边界上方
-        if (scrollTop + 120 + panelHeight > boundaryBottom) {
-            panel.style.setProperty('position', 'absolute', 'important');
-            panel.style.setProperty('top', (boundaryBottom - panelHeight) + 'px', 'important');
-        } else {
-            panel.style.setProperty('position', 'fixed', 'important');
-            panel.style.setProperty('top', '120px', 'important');
-        }
-    }
-
-    window.addEventListener('scroll', function () {
-        if (!rafPending) { rafPending = true; requestAnimationFrame(updateActive); }
-    }, { passive: true });
-
-    updateActive();
-});
-</script>
-
-<!-- § 4. 惯性平滑滚动 -->
+<!-- §3 ── Lenis 平滑滚动
+     ─ 位于 footer，DOM 已解析完毕，同步加载 Lenis 不会阻塞内容渲染
+     ─ CDN 加载失败时静默降级为浏览器原生滚动，页面功能不受影响
+     ─ 暴露 window.pixyllLenis，供 Lightbox（§7）调用：
+         window.pixyllLenis.stop()  —— 开启 Lightbox 时锁定滚动
+         window.pixyllLenis.start() —— 关闭 Lightbox 时恢复滚动
+     ─ 调参说明：
+         duration        滚动动画时长（秒），越大越慢越顺滑
+         easing          缓动曲线，当前为 ease-out-quart
+         wheelMultiplier 滚轮速度倍率（与原自制实现保持一致）
+  ============================================================================= -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
 <script>
 (function () {
-    var SPEED = 0.03, WHEEL_MUL = 1.2, current = window.pageYOffset, target = current, ticking = false;
-    function lerp(a, b, t) { return a + (b - a) * t; }
-    function loop() {
-        var maxY = Math.max(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight, 0);
-        target = Math.max(0, Math.min(target, maxY));
-        current = lerp(current, target, SPEED);
-        if (Math.abs(target - current) < 0.5) { current = target; ticking = false; window.scrollTo(0, current); return; }
-        window.scrollTo(0, current);
-        requestAnimationFrame(loop);
-    }
-    var isMidScroll = false;
-    window.addEventListener('mousedown', function (e) { if (e.button === 1) { isMidScroll = true; current = target = window.pageYOffset; ticking = false; } });
-    window.addEventListener('mouseup', function (e) { if (e.button === 1) { isMidScroll = false; current = target = window.pageYOffset; } });
-    function onWheel(e) {
-        if (e.ctrlKey || e.metaKey || isMidScroll) return;
-        e.preventDefault();
-        target += ((e.deltaMode === 1) ? e.deltaY * 28 : e.deltaY) * WHEEL_MUL;
-        if (!ticking) { current = window.pageYOffset; ticking = true; requestAnimationFrame(loop); }
-    }
-    window.removeEventListener('wheel', onWheel);
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('resize', function () { current = target = window.pageYOffset; });
-    window.addEventListener('scroll', function () { if (!ticking) { current = target = window.pageYOffset; } });
+    if (typeof Lenis === 'undefined') return; /* CDN 加载失败时静默降级 */
+
+    var lenis = new Lenis({
+        duration:        1.2,
+        easing:          function (t) { return 1 - Math.pow(1 - t, 4); }, /* ease-out-quart */
+        wheelMultiplier: 1.2,
+        smoothWheel:     true,
+        touchMultiplier: 2,
+    });
+
+    /* RAF 驱动循环，持续驱动 Lenis 更新 */
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    /* 暴露实例供 Lightbox（§7）暂停/恢复滚动 */
+    window.pixyllLenis = lenis;
 })();
 </script>
 
-<!-- § 5. 支持 / 反对 内联到 postDesc -->
-<script>
-$(function () {
-    if (!/\/p\/\d+/.test(window.location.href)) return;
-    var postDesc = document.querySelector('.postDesc');
-    if (!postDesc) return;
 
-    function getCount(id) { var el = document.getElementById(id); return el ? (parseInt(el.textContent.trim(), 10) || 0) : 0; }
-    function syncCounts() {
-        var da = document.getElementById('pixyll-digg-a'), ba = document.getElementById('pixyll-bury-a');
-        if (da) da.textContent = '\u652F\u6301(' + getCount('digg_count') + ')';
-        if (ba) ba.textContent = '\u53CD\u5BF9(' + getCount('bury_count') + ')';
-    }
-
-    function buildLinks() {
-        if (document.getElementById('pixyll-inline-digg')) { syncCounts(); return; }
-        var wrap = document.createElement('span'); wrap.id = 'pixyll-inline-digg';
-
-        var diggA = document.createElement('a'); diggA.id = 'pixyll-digg-a'; diggA.href = 'javascript:void(0)';
-        diggA.onclick = function () { var btn = document.querySelector('.diggit input, .diggit'); if (btn) btn.click(); setTimeout(syncCounts, 1500); };
-
-        var sep = document.createElement('span'); sep.textContent = ' ';
-
-        var buryA = document.createElement('a'); buryA.id = 'pixyll-bury-a'; buryA.href = 'javascript:void(0)';
-        buryA.onclick = function () { var btn = document.querySelector('.buryit input, .buryit'); if (btn) btn.click(); setTimeout(syncCounts, 1500); };
-
-        wrap.appendChild(diggA); wrap.appendChild(sep); wrap.appendChild(buryA);
-        var dot = document.createElement('span'); dot.textContent = ' \u00b7 ';
-        postDesc.appendChild(dot); postDesc.appendChild(wrap);
-        syncCounts();
-
-        var divDigg = document.getElementById('div_digg');
-        if (divDigg) new MutationObserver(syncCounts).observe(divDigg, { subtree: true, childList: true, characterData: true });
-    }
-
-    var tried = 0, timer = setInterval(function () {
-        tried++;
-        if (document.getElementById('digg_count')) { clearInterval(timer); buildLinks(); } 
-        else if (tried >= 30) { clearInterval(timer); }
-    }, 200);
-});
-</script>
-
-<!-- § 6. 订阅此文 链接 + RSS 弹窗 -->
-<script>
-$(function () {
-    if (!/\/p\/\d+/.test(window.location.href)) return;
-    var postDesc = document.querySelector('.postDesc');
-    if (!postDesc || document.getElementById('pixyll-rss-a')) return;
-
-    var match = window.location.pathname.match(/^\/([^\/]+)\/p\//);
-    if (!match) return;
-    var rssHref = 'https://www.cnblogs.com/' + match[1] + '/rss';
-
-    var overlay = document.createElement('div'); overlay.id = 'pixyll-rss-overlay';
-    Object.assign(overlay.style, { display: 'none', position: 'fixed', top: '0', left: '0', width: '100%', height: '100%', background: 'rgba(0,0,0,0.18)', zIndex: '99998' });
-
-    var box = document.createElement('div');
-    Object.assign(box.style, { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#fff', padding: '36px 40px 28px', width: '320px', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', fontFamily: '"Playfair Display","Songti SC","SimSun",serif' });
-
-    var title = document.createElement('p'); title.textContent = '\u8BA2\u9605\u6B64\u535A\u5BA2';
-    Object.assign(title.style, { fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 20px 0' });
-
-    var row = document.createElement('div'); Object.assign(row.style, { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' });
-    var input = document.createElement('input'); input.type = 'text'; input.value = rssHref; input.readOnly = true;
-    Object.assign(input.style, { flex: '1', border: '1px solid #ddd', padding: '7px 10px', fontSize: '13px', fontFamily: 'inherit', color: '#555', outline: 'none', boxSizing: 'border-box' });
-
-    var copyBtn = document.createElement('button'); copyBtn.textContent = '\u590D\u5236';
-    Object.assign(copyBtn.style, { border: '1px solid #111', background: '#111', color: '#fff', padding: '7px 14px', fontSize: '13px', fontFamily: 'inherit', cursor: 'pointer', flexShrink: '0' });
-    copyBtn.onclick = function () { input.select(); document.execCommand('copy'); copyBtn.textContent = '\u5DF2\u590D\u5236'; setTimeout(function () { copyBtn.textContent = '\u590D\u5236'; }, 1500); };
-
-    var closeBtn = document.createElement('a'); closeBtn.href = 'javascript:void(0)'; closeBtn.textContent = '\u5173\u95ED';
-    Object.assign(closeBtn.style, { fontSize: '13px', color: '#bbb', textDecoration: 'none', display: 'block', textAlign: 'right' });
-    closeBtn.onclick = function () { overlay.style.display = 'none'; };
-    overlay.onclick = function (e) { if (e.target === overlay) overlay.style.display = 'none'; };
-
-    row.appendChild(input); row.appendChild(copyBtn); box.appendChild(title); box.appendChild(row); box.appendChild(closeBtn); overlay.appendChild(box); document.body.appendChild(overlay);
-
-    var newA = document.createElement('a'); newA.id = 'pixyll-rss-a'; newA.href = 'javascript:void(0)'; newA.textContent = '\u8BA2\u9605\u6B64\u6587';
-    newA.onclick = function () { overlay.style.display = 'block'; };
-    var dot = document.createElement('span'); dot.textContent = ' \u00b7 ';
-    postDesc.appendChild(dot); postDesc.appendChild(newA);
-});
-</script>
-
-<!-- § 7. 页面切换淡入淡出 -->
+<!-- §4 ── 页面过渡淡入淡出
+     ─ html { opacity:0 } 已在 CSS §12 设定
+     ─ DOMContentLoaded / pageshow / visibilitychange 多场景触发淡入
+     ─ 同域链接：先淡出（240ms）再跳转，避免白色闪烁
+  ============================================================================= -->
 <script>
 (function () {
     var root = document.documentElement;
-    function showPage() { requestAnimationFrame(function () { requestAnimationFrame(function () { root.style.opacity = '1'; }); }); }
-    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', showPage); } else { showPage(); }
-    window.addEventListener('pageshow', function () { showPage(); });
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') showPage(); });
+
+    function showPage() {
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { root.style.opacity = '1'; });
+        });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showPage);
+    else showPage();
+    window.addEventListener('pageshow', showPage);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') showPage();
+    });
+
+    /* 同域链接点击：淡出后跳转 */
     document.addEventListener('click', function (e) {
         var a = e.target.closest('a');
-        if (!a || !a.href || a.target === '_blank' || a.href.indexOf('javascript') === 0 || (a.getAttribute('href') || '').indexOf('#') === 0 || a.hostname !== window.location.hostname) return;
-        e.preventDefault(); root.style.opacity = '0'; setTimeout(function () { window.location.href = a.href; }, 240);
+        if (!a || !a.href
+            || a.target === '_blank'
+            || a.href.indexOf('javascript') === 0
+            || (a.getAttribute('href') || '').charAt(0) === '#'
+            || a.hostname !== window.location.hostname) return;
+        e.preventDefault();
+        root.style.opacity = '0';
+        setTimeout(function () { window.location.href = a.href; }, 240);
     });
 })();
 </script>
 
-<!-- § 8. 隐藏 .blogStats -->
-<script>
-$(function () { var stats = document.querySelector('.blogStats'); if (stats) stats.style.setProperty('display', 'none', 'important'); });
-</script>
 
-<!-- § 9. 文章页二级导航栏 + 主页分割线 -->
+<!-- §5 ── DOMContentLoaded 主逻辑
+     ─ 所有依赖 DOM 的操作集中于此，减少浏览器重排次数
+  ============================================================================= -->
 <script>
-$(function () {
-    var isPost = /\/p\/\d+/.test(window.location.href), header = document.getElementById('header');
+document.addEventListener('DOMContentLoaded', function () {
+
+    /* 是否为文章详情页（URL 含 /p/数字） */
+    var isPost = /\/p\/\d+/.test(window.location.href);
+
+    /* ── 5-A  隐藏 [Ctrl+Enter] 提示
+       用 MutationObserver 持续监测，应对评论框动态注入的场景
+    ────────────────────────────────────────────────────────────────────────── */
+    function hideCtrlEnter() {
+        document.querySelectorAll('p, span').forEach(function (el) {
+            if (el.textContent.indexOf('Ctrl+Enter') >= 0) el.style.display = 'none';
+        });
+    }
+    hideCtrlEnter();
+    new MutationObserver(hideCtrlEnter).observe(document.body, { childList: true, subtree: true });
+
+    /* ── 5-B  隐藏 .blogStats（博客统计栏） ── */
+    var stats = document.querySelector('.blogStats');
+    if (stats) stats.style.setProperty('display', 'none', 'important');
+
+    /* ── 5-C  注入二级导航（文章页）or 主页分割线
+    ────────────────────────────────────────────────────────────────────────── */
+    var headerEl = document.getElementById('header');
+
     if (!isPost) {
-        if (header) { var hr = document.createElement('hr'); hr.id = 'pixyll-home-divider'; header.insertAdjacentElement('afterend', hr); }
-        return;
-    }
-
-    var bt = document.getElementById('blogTitle'); if (bt) bt.style.setProperty('display', 'none', 'important');
-    if (!header) return;
-
-    var dateText = '', postDesc = document.querySelector('.postDesc');
-    if (postDesc) { var m = postDesc.textContent.match(/\d{4}[-\/]\d{1,2}[-\/]\d{1,2}/); if (m) dateText = m[0]; }
-
-    var blogName = '', blogTitleEl = document.querySelector('#blogTitle h1 a');
-    if (blogTitleEl) blogName = blogTitleEl.textContent.trim();
-
-    var nav = document.createElement('div'); nav.id = 'pixyll-subnav';
-    var homeA = document.createElement('a'); homeA.href = 'https://www.cnblogs.com/jayzorn-ljz/'; homeA.textContent = '\u2190 \u4e3b\u9875'; nav.appendChild(homeA);
-    if (blogName) { var nameA = document.createElement('a'); nameA.href = 'https://www.cnblogs.com/jayzorn-ljz/'; nameA.textContent = blogName; nav.appendChild(nameA); }
-    if (dateText) { var dateSpan = document.createElement('span'); dateSpan.className = 'subnav-date'; dateSpan.textContent = dateText; nav.appendChild(dateSpan); }
-
-    [{ text: 'GitHub', href: 'https://github.com/JayZorn-LJZ' }, { text: 'X', href: 'https://x.com/jayzorn_ljz' }].forEach(function (item) {
-        var a = document.createElement('a'); a.href = item.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = item.text + ' \u21d7'; nav.appendChild(a);
-    });
-    header.insertAdjacentElement('afterend', nav);
-});
-</script>
-
-<!-- § 10. 主题切换（跟随系统 / 浅色 / 深色） -->
-<script>
-function pixyllSetTheme(theme) {
-    var root = document.documentElement;
-    var STORAGE_KEY = 'pixyll-theme';
-    try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
-
-    if (theme === 'system') {
-        root.removeAttribute('data-theme');
+        /* 主页：在 header 后插入分割线，之后不再执行文章页逻辑 */
+        if (headerEl) {
+            var hr = document.createElement('hr');
+            hr.id  = 'pixyll-home-divider';
+            headerEl.insertAdjacentElement('afterend', hr);
+        }
     } else {
-        root.setAttribute('data-theme', theme);
+        /* 文章页：隐藏博客大标题，注入二级导航 */
+        var bt = document.getElementById('blogTitle');
+        if (bt) bt.style.setProperty('display', 'none', 'important');
+
+        if (headerEl) {
+            /* 从 postDesc 提取发布日期 */
+            var dateText = '';
+            var pdTmp = document.querySelector('.postDesc');
+            if (pdTmp) {
+                var dm = pdTmp.textContent.match(/\d{4}[-\/]\d{1,2}[-\/]\d{1,2}/);
+                if (dm) dateText = dm[0];
+            }
+            /* 从 blogTitle 提取博主名 */
+            var blogTitleEl = document.querySelector('#blogTitle h1 a');
+            var blogName = blogTitleEl ? blogTitleEl.textContent.trim() : '';
+
+            /* 构建导航 DOM */
+            var nav = document.createElement('div');
+            nav.id  = 'pixyll-subnav';
+
+            function makeLink(text, href, external) {
+                var a = document.createElement('a');
+                a.href = href; a.textContent = text;
+                if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+                return a;
+            }
+
+            nav.appendChild(makeLink('← 主页', 'https://www.cnblogs.com/jayzorn-ljz/'));
+            if (blogName) nav.appendChild(makeLink(blogName, 'https://www.cnblogs.com/jayzorn-ljz/'));
+            if (dateText) {
+                var dateSpan = document.createElement('span');
+                dateSpan.className = 'subnav-date';
+                dateSpan.textContent = dateText;
+                nav.appendChild(dateSpan);
+            }
+            [{ text: 'GitHub', href: 'https://github.com/JayZorn-LJZ' },
+             { text: 'X',      href: 'https://x.com/jayzorn_ljz' }
+            ].forEach(function (item) { nav.appendChild(makeLink(item.text + ' ⇗', item.href, true)); });
+
+            headerEl.insertAdjacentElement('afterend', nav);
+        }
+
+        /* ── 5-D  统一 MutationObserver —— 等待文章页异步渲染的 4 个元素
+           ─ 合并为 1 个 Observer，减少重复监听开销
+           ─ 每个任务完成后标记，全部完成后自动断开；8s 后强制断开兜底
+        ──────────────────────────────────────────────────────────────────── */
+        var pdesc = document.querySelector('.postDesc');
+
+        /* Digg 按钮构建函数，需等待 #digg_count 出现后调用 */
+        function buildDiggLinks() {
+            if (!pdesc || document.getElementById('pixyll-inline-digg')) return;
+
+            function getCount(id) {
+                var el = document.getElementById(id);
+                return el ? (parseInt(el.textContent.trim(), 10) || 0) : 0;
+            }
+            function syncCounts() {
+                var da = document.getElementById('pixyll-digg-a');
+                var ba = document.getElementById('pixyll-bury-a');
+                if (da) da.textContent = '支持(' + getCount('digg_count') + ')';
+                if (ba) ba.textContent = '反对(' + getCount('bury_count') + ')';
+            }
+
+            var wrap  = document.createElement('span'); wrap.id = 'pixyll-inline-digg';
+            var diggA = document.createElement('a');    diggA.id = 'pixyll-digg-a'; diggA.href = 'javascript:void(0)';
+            var buryA = document.createElement('a');    buryA.id = 'pixyll-bury-a'; buryA.href = 'javascript:void(0)';
+
+            /* 点击时触发原始 Digg 按钮，1.5s 后同步计数 */
+            diggA.onclick = function () { var b = document.querySelector('.diggit input, .diggit'); if (b) b.click(); setTimeout(syncCounts, 1500); };
+            buryA.onclick = function () { var b = document.querySelector('.buryit input, .buryit'); if (b) b.click(); setTimeout(syncCounts, 1500); };
+
+            wrap.appendChild(diggA);
+            wrap.appendChild(document.createTextNode(' '));
+            wrap.appendChild(buryA);
+            pdesc.appendChild(document.createTextNode(' · '));
+            pdesc.appendChild(wrap);
+            syncCounts();
+
+            /* 监听 div_digg 区块变化，保持计数实时同步 */
+            var divDigg = document.getElementById('div_digg');
+            if (divDigg) new MutationObserver(syncCounts).observe(divDigg, { subtree: true, childList: true, characterData: true });
+        }
+
+        /* 任务完成状态标记（true = 已完成，无需再检查） */
+        var done = {
+            moveDesc:     false,  /* postDesc 移至 EntryTag 上方 */
+            removeAuthor: false,  /* 移除 postDesc 中的作者链接 */
+            addCC:        false,  /* post-date 右侧插入 CC 许可证 */
+            addDigg:      !pdesc  /* 无 postDesc 则直接跳过 */
+        };
+
+        /* 若 digg_count 已在 DOM 中则立即执行，无需等 Observer */
+        if (!done.addDigg && document.getElementById('digg_count')) {
+            buildDiggLinks(); done.addDigg = true;
+        }
+
+        if (!(done.moveDesc && done.removeAuthor && done.addCC && done.addDigg)) {
+            var obs = new MutationObserver(function () {
+                /* 将 postDesc 移至 EntryTag 上方 */
+                if (!done.moveDesc) {
+                    var entryTag = document.getElementById('EntryTag');
+                    if (entryTag && pdesc) {
+                        entryTag.parentNode.insertBefore(pdesc, entryTag);
+                        done.moveDesc = true;
+                    }
+                }
+                /* 移除 postDesc 中的作者链接 */
+                if (!done.removeAuthor && pdesc) {
+                    var authorLink = pdesc.querySelector('a[href*="/jayzorn-ljz"]');
+                    if (authorLink) {
+                        var prev = authorLink.previousSibling;
+                        if (prev && prev.nodeType === 3) {
+                            prev.textContent = prev.textContent.replace(/\s*[Bb]y\s*$/, '').replace(/·\s*$/, '');
+                        }
+                        authorLink.remove();
+                        done.removeAuthor = true;
+                    }
+                }
+                /* 在 post-date 右侧插入 CC 许可证 */
+                if (!done.addCC) {
+                    var postDate = document.getElementById('post-date');
+                    if (postDate && !document.getElementById('pixyll-cc')) {
+                        var cc = document.createElement('span');
+                        cc.id = 'pixyll-cc'; cc.textContent = ' · CC BY-NC-ND 4.0';
+                        postDate.insertAdjacentElement('afterend', cc);
+                        done.addCC = true;
+                    }
+                }
+                /* 构建 Digg 内联按钮 */
+                if (!done.addDigg && document.getElementById('digg_count')) {
+                    buildDiggLinks(); done.addDigg = true;
+                }
+
+                /* 全部完成后立即断开，节省性能 */
+                if (done.moveDesc && done.removeAuthor && done.addCC && done.addDigg) obs.disconnect();
+            });
+            obs.observe(document.body, { childList: true, subtree: true });
+            setTimeout(function () { obs.disconnect(); }, 8000); /* 8s 超时兜底 */
+        }
     }
 
-    /* 直接强写背景色，绕过博客园样式表的覆盖 */
-    var isDark = theme === 'dark' ||
-        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    var bg = isDark ? '#1a1a1a' : '#ffffff';
-    document.body.style.setProperty('background-color', bg, 'important');
-    root.style.setProperty('background-color', bg, 'important');
-
-    document.querySelectorAll('.pixyll-theme-btn').forEach(function (btn) {
-        btn.setAttribute('data-active', btn.getAttribute('data-t') === theme ? 'true' : 'false');
-    });
-}
-
-(function () {
-    var STORAGE_KEY = 'pixyll-theme';
-    var root = document.documentElement;
-
-    var saved;
-    try { saved = localStorage.getItem(STORAGE_KEY) || 'system'; } catch (e) { saved = 'system'; }
-    if (saved === 'dark')  root.setAttribute('data-theme', 'dark');
-    if (saved === 'light') root.setAttribute('data-theme', 'light');
-
-    /* 刷新时立即强写背景，避免白屏闪烁 */
-    var initDark = saved === 'dark' ||
-        (saved === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    var initBg = initDark ? '#1a1a1a' : '#ffffff';
-    root.style.setProperty('background-color', initBg, 'important');
-    /* body 此时可能还未就绪，用 DOMContentLoaded 兜底 */
-    document.addEventListener('DOMContentLoaded', function () {
-        document.body.style.setProperty('background-color', initBg, 'important');
-    });
-
-    $(function () {
-        var footer = document.getElementById('footer');
-        if (!footer) return;
+    /* ── 5-E  主题切换按钮（插入 footer）
+       ─ ⚠ 所有页面均需执行，不可放入 isPost 分支内
+       ─ 三个按钮：跟随系统 / 浅色 / 深色
+       ─ touchend + click 双绑定，保证移动端兼容
+    ────────────────────────────────────────────────────────────────────────── */
+    var footer = document.getElementById('footer');
+    if (footer) {
+        var KEY   = 'pixyll-theme';
+        var saved; try { saved = localStorage.getItem(KEY) || 'system'; } catch (e) { saved = 'system'; }
 
         var wrap = document.createElement('div');
-        wrap.id = 'pixyll-theme-switcher';
-        wrap.style.cssText = 'margin-top:14px;display:flex;justify-content:center;gap:20px;';
+        Object.assign(wrap.style, { marginTop: '14px', display: 'flex', justifyContent: 'center', gap: '20px' });
 
-        [['system','跟随系统'], ['light','浅色'], ['dark','深色']].forEach(function (item) {
+        [['system', '跟随系统'], ['light', '浅色'], ['dark', '深色']].forEach(function (item) {
             var btn = document.createElement('button');
             btn.textContent = item[1];
-            btn.className = 'pixyll-theme-btn';
-            btn.setAttribute('data-t', item[0]);
+            btn.className   = 'pixyll-theme-btn';
+            btn.setAttribute('type',        'button');
+            btn.setAttribute('data-t',      item[0]);
             btn.setAttribute('data-active', saved === item[0] ? 'true' : 'false');
-            btn.setAttribute('type', 'button');
 
-            function handler(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                pixyllSetTheme(item[0]);
-            }
+            function handler(e) { e.preventDefault(); e.stopPropagation(); window.pixyllSetTheme(item[0]); }
             btn.addEventListener('touchend', handler, { passive: false });
-            btn.addEventListener('click', handler);
-
+            btn.addEventListener('click',    handler);
             wrap.appendChild(btn);
         });
 
         footer.appendChild(wrap);
+    }
 
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
-            var cur;
-            try { cur = localStorage.getItem(STORAGE_KEY) || 'system'; } catch (e) { cur = 'system'; }
-            if (cur === 'system') pixyllSetTheme('system');
+}); /* end DOMContentLoaded */
+</script>
+
+
+<!-- §6 ── 文章页非首屏功能（requestIdleCallback 延迟执行）
+     ─ 以下功能不影响首屏渲染，在浏览器空闲时初始化，不占用关键帧
+     ─ requestIdleCallback 不支持时回退到 setTimeout 100ms
+  ============================================================================= -->
+<script>
+(function () {
+    if (!/\/p\/\d+/.test(window.location.href)) return;
+
+    /* 兼容性包装：优先使用 requestIdleCallback，否则延迟 100ms */
+    var idle = window.requestIdleCallback
+        ? function (fn) { requestIdleCallback(fn, { timeout: 2000 }); }
+        : function (fn) { setTimeout(fn, 100); };
+
+    /* ── 6-A  浮动目录 TOC
+       ─ 从 postBody 提取 h2/h3，生成可点击目录
+       ─ 滚动时：① 高亮当前章节；② 临近 blog_post_info_block 时切 absolute 防越界
+       ─ 与 Lightbox 联动：通过自定义事件 pixyll:lightbox:open/close 隐藏/恢复
+    ────────────────────────────────────────────────────────────────────────── */
+    idle(function () {
+        var postBody = document.getElementById('cnblogs_post_body')
+                    || document.getElementById('post_detail')
+                    || document.getElementById('mainContent');
+        if (!postBody) return;
+
+        var headings = Array.prototype.filter.call(
+            postBody.querySelectorAll('h2, h3'),
+            function (h) { return h.textContent.trim().length > 0; }
+        );
+        if (headings.length < 1) return;
+
+        /* 确保每个标题有 id */
+        headings.forEach(function (h, i) { if (!h.id) h.id = 'toc-h-' + i; });
+
+        /* 构建 TOC 面板 */
+        var panel = document.createElement('div');
+        panel.id  = 'pixyll-toc-panel';
+
+        var tocTitle = document.createElement('p');
+        tocTitle.className   = 'toc-heading';
+        tocTitle.textContent = 'Contents';
+        panel.appendChild(tocTitle);
+
+        var tocLinks = headings.map(function (h) {
+            var a = document.createElement('a');
+            a.href        = '#' + h.id;
+            a.textContent = h.textContent.trim();
+            a.className   = h.tagName === 'H3' ? 'toc-h3' : '';
+            a.addEventListener('click', function (e) {
+                e.preventDefault();
+                /* 有 Lenis 时用 scrollTo，否则降级到原生 */
+                if (window.pixyllLenis) {
+                    window.pixyllLenis.scrollTo(h, { offset: -24 });
+                } else {
+                    window.scrollTo({ top: h.getBoundingClientRect().top + window.pageYOffset - 24, behavior: 'smooth' });
+                }
+            });
+            panel.appendChild(a);
+            return { el: a, heading: h };
+        });
+        document.body.appendChild(panel);
+
+        /* Lightbox 联动（通过自定义事件） */
+        document.addEventListener('pixyll:lightbox:open',  function () { panel.style.setProperty('display', 'none', 'important'); });
+        document.addEventListener('pixyll:lightbox:close', function () { panel.style.removeProperty('display'); });
+
+        /* 滚动时：高亮当前章节 + 防越界定位 */
+        var rafPending = false;
+        var infoBlock  = document.getElementById('blog_post_info_block');
+
+        function updateToc() {
+            rafPending = false;
+            var scrollTop = window.pageYOffset;
+
+            /* 高亮：最后一个 offsetTop ≤ scrollTop + 80 的标题 */
+            var cur = null;
+            headings.forEach(function (h) { if (h.offsetTop <= scrollTop + 80) cur = h; });
+            tocLinks.forEach(function (item) { item.el.classList.toggle('toc-active', item.heading === cur); });
+
+            /* 防越界：临近底部信息块时切换为 absolute */
+            var boundary = infoBlock
+                ? infoBlock.getBoundingClientRect().top + scrollTop - 40
+                : postBody.getBoundingClientRect().bottom + scrollTop;
+
+            if (scrollTop + 120 + panel.offsetHeight > boundary) {
+                panel.style.setProperty('position', 'absolute', 'important');
+                panel.style.setProperty('top', (boundary - panel.offsetHeight) + 'px', 'important');
+            } else {
+                panel.style.setProperty('position', 'fixed', 'important');
+                panel.style.setProperty('top', '120px', 'important');
+            }
+        }
+
+        window.addEventListener('scroll', function () {
+            if (!rafPending) { rafPending = true; requestAnimationFrame(updateToc); }
+        }, { passive: true });
+        updateToc();
+    });
+
+    /* ── 6-B  订阅此文 RSS 弹窗
+       ─ 在 postDesc 追加「订阅此文」链接；点击后弹出含 RSS 地址的模态框
+    ────────────────────────────────────────────────────────────────────────── */
+    idle(function () {
+        var rssDesc = document.querySelector('.postDesc');
+        if (!rssDesc || document.getElementById('pixyll-rss-a')) return;
+
+        var umatch = window.location.pathname.match(/^\/([^\/]+)\/p\//);
+        if (!umatch) return;
+
+        var rssHref = 'https://www.cnblogs.com/' + umatch[1] + '/rss';
+
+        /* 遮罩层 */
+        var overlay = document.createElement('div');
+        overlay.id  = 'pixyll-rss-overlay';
+        Object.assign(overlay.style, {
+            display: 'none', position: 'fixed',
+            top: '0', left: '0', width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.18)', zIndex: '99998'
+        });
+
+        /* 弹窗盒子 */
+        var box = document.createElement('div');
+        Object.assign(box.style, {
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%,-50%)',
+            background: '#fff', padding: '36px 40px 28px',
+            width: '320px', boxSizing: 'border-box',
+            boxShadow: '0 4px 24px rgba(0,0,0,.1)',
+            fontFamily: 'var(--serif)'
+        });
+
+        /* 弹窗标题 */
+        var rssTitle = document.createElement('p');
+        rssTitle.textContent = '订阅此博客';
+        Object.assign(rssTitle.style, { fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 20px' });
+
+        /* RSS 地址 + 复制按钮 */
+        var row = document.createElement('div');
+        Object.assign(row.style, { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' });
+
+        var input = document.createElement('input');
+        input.type = 'text'; input.value = rssHref; input.readOnly = true;
+        Object.assign(input.style, {
+            flex: '1', border: '1px solid #ddd', padding: '7px 10px',
+            fontSize: '13px', fontFamily: 'inherit', color: '#555',
+            outline: 'none', boxSizing: 'border-box'
+        });
+
+        var copyBtn = document.createElement('button');
+        copyBtn.textContent = '复制';
+        Object.assign(copyBtn.style, {
+            border: '1px solid #111', background: '#111', color: '#fff',
+            padding: '7px 14px', fontSize: '13px', fontFamily: 'inherit',
+            cursor: 'pointer', flexShrink: '0'
+        });
+        copyBtn.onclick = function () {
+            input.select(); document.execCommand('copy');
+            copyBtn.textContent = '已复制';
+            setTimeout(function () { copyBtn.textContent = '复制'; }, 1500);
+        };
+
+        /* 关闭按钮 */
+        var closeBtn = document.createElement('a');
+        closeBtn.href = 'javascript:void(0)'; closeBtn.textContent = '关闭';
+        Object.assign(closeBtn.style, { fontSize: '13px', color: '#bbb', textDecoration: 'none', display: 'block', textAlign: 'right' });
+        closeBtn.onclick  = function () { overlay.style.display = 'none'; };
+        overlay.onclick   = function (e) { if (e.target === overlay) overlay.style.display = 'none'; };
+
+        row.appendChild(input); row.appendChild(copyBtn);
+        box.appendChild(rssTitle); box.appendChild(row); box.appendChild(closeBtn);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        /* 在 postDesc 末尾追加「订阅此文」链接 */
+        var rssLink = document.createElement('a');
+        rssLink.id = 'pixyll-rss-a'; rssLink.href = 'javascript:void(0)'; rssLink.textContent = '订阅此文';
+        rssLink.onclick = function () { overlay.style.display = 'block'; };
+        rssDesc.appendChild(document.createTextNode(' · '));
+        rssDesc.appendChild(rssLink);
+    });
+
+})();
+</script>
+
+
+<!-- §7 ── 图片查看器 Lightbox（仅文章页）
+     ─ requestIdleCallback 延迟初始化，不阻塞首屏
+     ─ 开启时：① 调用 window.pixyllLenis.stop() 锁定 Lenis 滚动
+               ② 派发自定义事件 pixyll:lightbox:open 隐藏 TOC（§6-A）
+     ─ 关闭时反向恢复（start + close 事件）
+     ─ 图片设 pointer-events:none，点击穿透到遮罩触发关闭
+  ============================================================================= -->
+<script>
+(function () {
+    if (!/\/p\/\d+/.test(window.location.href)) return;
+
+    var idle = window.requestIdleCallback
+        ? function (fn) { requestIdleCallback(fn, { timeout: 2000 }); }
+        : function (fn) { setTimeout(fn, 100); };
+
+    idle(function () {
+        var postBody = document.getElementById('cnblogs_post_body');
+        if (!postBody) return;
+
+        /* 构建遮罩 DOM */
+        var lb    = document.createElement('div');
+        lb.id     = 'pixyll-lightbox';
+        var lbImg = document.createElement('img');
+        lb.appendChild(lbImg);
+        document.body.appendChild(lb);
+
+        function openLightbox(src, alt) {
+            lbImg.src = src; lbImg.alt = alt || '';
+            /* 暂停 Lenis 滚动（CDN 加载失败时 pixyllLenis 为 undefined，安全跳过） */
+            if (window.pixyllLenis) window.pixyllLenis.stop();
+            document.body.style.overflow = 'hidden';
+            lb.classList.add('lb-open');
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () { lb.classList.add('lb-visible'); });
+            });
+            document.dispatchEvent(new CustomEvent('pixyll:lightbox:open'));
+        }
+
+        function closeLightbox() {
+            /* 恢复 Lenis 滚动 */
+            if (window.pixyllLenis) window.pixyllLenis.start();
+            document.body.style.overflow = '';
+            lb.classList.remove('lb-visible');
+            setTimeout(function () { lb.classList.remove('lb-open'); lbImg.src = ''; }, 270);
+            document.dispatchEvent(new CustomEvent('pixyll:lightbox:close'));
+        }
+
+        /* 点击正文图片打开（stopPropagation 防冒泡到遮罩） */
+        postBody.addEventListener('click', function (e) {
+            var img = e.target.closest('img');
+            if (!img) return;
+            e.stopPropagation();
+            openLightbox(img.src, img.alt);
+        });
+
+        /* 点击遮罩 / 按 Esc 关闭 */
+        lb.addEventListener('click', closeLightbox);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && lb.classList.contains('lb-open')) closeLightbox();
         });
     });
 })();
